@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="36.033" height="36.033" viewBox="0 0 36.033 36.033"><defs><style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+    </style><linearGradient id="linear-gradient" x1="0.266" y1="0.898" x2="1.047" y2="0.108" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#00ceb5"></stop><stop offset="1" stop-color="#effcfb"></stop></linearGradient></defs><g id="risk-alert-bell-icon" transform="translate(-3 -3)"><path id="Path_32" data-name="Path 32" class="cls-1" d="M39.033,21.017A18.017,18.017,0,1,1,21.017,3,18.017,18.017,0,0,1,39.033,21.017Z" transform="translate(0 0)"></path><path id="Icon_awesome-bell" data-name="Icon awesome-bell" class="cls-2" d="M7.448,17.024A2.128,2.128,0,0,0,9.575,14.9H5.321A2.128,2.128,0,0,0,7.448,17.024Zm7.162-4.978c-.642-.69-1.844-1.729-1.844-5.13A5.251,5.251,0,0,0,8.511,1.757V1.064a1.063,1.063,0,1,0-2.127,0v.693A5.251,5.251,0,0,0,2.131,6.916c0,3.4-1.2,4.44-1.844,5.13A1.039,1.039,0,0,0,0,12.768a1.065,1.065,0,0,0,1.067,1.064H13.829A1.065,1.065,0,0,0,14.9,12.768a1.038,1.038,0,0,0-.286-.722Z" transform="translate(13.568 12.504)"></path></g></svg>
