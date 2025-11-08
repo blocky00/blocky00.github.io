@@ -1,29 +1,35 @@
 # NotebookLM Frame Extractor
 
-A single-page web app that runs completely in the browser to extract visually distinct frames from NotebookLM-exported MP4 videos. Upload a video and the page will render only the frames that differ from previous saves by a configurable threshold, then let you download PNGs or a bundled ZIP (with a manifest) without sending any data to a server.
-
-## Features
-
-- Client-side processing using the HTML5 Video + Canvas APIs; no backend services or uploads required.
-- Adjustable difference threshold and minimum spacing to control how many frames are emitted.
-- Automatic fallback for browsers that do not support `requestVideoFrameCallback` by stepping through the video at a configurable FPS estimate.
-- Instant download links for each extracted frame and an optional ZIP containing all frames plus `frames.json` metadata.
+A minimal FastAPI backend and lightweight HTML frontend for extracting visually distinct frames from NotebookLM-style MP4 exports. Upload an MP4 file and receive PNG stills labeled with their frame numbers and timestamps, plus a downloadable archive.
 
 ## Getting started
 
-1. Open [`frame_extractor.html`](frame_extractor.html) in any modern desktop browser (Chrome, Edge, Firefox, or Safari).
-2. Choose your NotebookLM MP4 export and tweak the extraction settings if needed.
-3. Click **Extract frames** and wait for processing to finish.
-4. Download individual PNGs or the generated ZIP archive.
+1. **Install dependencies**
 
-> **Tip:** Processing long or high-resolution videos is CPU intensive. Keep the tab focused during extraction and consider increasing the minimum interval or threshold to reduce the number of frames captured.
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
 
-## Technical notes
+2. **Run the backend**
 
-- The per-frame difference score is the average absolute RGB delta compared to the previously saved frame, producing values in the 0–255 range.
-- Frame filenames include their index and timestamp (e.g., `frame_00012_t4.80.png`) to simplify importing into downstream AI tools.
-- All generated object URLs are revoked once you start a new extraction to free browser memory.
+   ```bash
+   uvicorn app.main:app --reload
+   ```
 
-## Compatibility
+   The API exposes:
 
-The app targets evergreen browsers. On platforms where `requestVideoFrameCallback` is unavailable, it falls back to seeking through the video at the configured FPS estimate. Mobile browsers may throttle background tabs, so for best results keep the page active during processing.
+   - `POST /upload` — accepts an MP4 file (`multipart/form-data` key `file`) and returns the list of extracted frames with download links.
+   - `/results/...` — static files served from the `output/` directory (individual frames and generated ZIP archives).
+
+3. **Open the frontend**
+
+   Serve `frame_extractor.html` (e.g. with the Live Server VS Code extension or any static file server) and point it to the running backend (defaults to the same origin).
+
+## How it works
+
+- The backend stores uploaded videos temporarily, extracts frames with OpenCV, and saves only frames that differ from the previous saved frame by an average grayscale difference threshold (default `5.0`).
+- Outputs are written to `output/<job_id>/frames`. A manifest (`frames.json`) and a ZIP archive of all frames are also generated for convenience.
+
+Adjust the logic in `app/main.py` if you need custom thresholds, alternative output formats, or long-running background jobs.
