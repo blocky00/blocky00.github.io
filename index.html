@@ -5,144 +5,600 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NotebookLM Frame Extractor</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
-      padding: 2rem;
-      background: #0f172a;
-      color: #f8fafc;
+      padding: 2rem 1.5rem 4rem;
+      background: radial-gradient(circle at top left, #1e293b 0%, #0f172a 55%, #020617 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
     }
 
     h1 {
-      margin-bottom: 1rem;
+      font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    p.lead {
+      max-width: 720px;
+      margin-bottom: 1.5rem;
+      color: rgba(226, 232, 240, 0.8);
     }
 
     form {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
+      display: grid;
+      gap: 1rem;
       padding: 1.5rem;
-      max-width: 520px;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.75rem;
     }
 
     label {
-      display: block;
-      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
     }
 
-    input[type="file"] {
-      display: block;
+    input[type="file"],
+    input[type="number"] {
       width: 100%;
-      margin-bottom: 1rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.6);
+      color: inherit;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
     }
 
     button {
-      background: #38bdf8;
-      border: none;
+      justify-self: flex-start;
+      background: linear-gradient(120deg, #38bdf8 0%, #0ea5e9 50%, #38bdf8 100%);
       color: #0f172a;
-      font-weight: bold;
+      border: none;
+      font-weight: 700;
       padding: 0.75rem 1.5rem;
-      border-radius: 6px;
+      border-radius: 999px;
       cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 12px 20px rgba(14, 165, 233, 0.25);
     }
 
     button:disabled {
+      opacity: 0.65;
       cursor: not-allowed;
-      opacity: 0.6;
+      transform: none;
+      box-shadow: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 14px 28px rgba(14, 165, 233, 0.35);
+    }
+
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      gap: 0.75rem;
+      flex-direction: column;
+    }
+
+    .status.active {
+      display: flex;
+    }
+
+    .status h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: rgba(148, 163, 184, 0.25);
+    }
+
+    progress::-webkit-progress-bar {
+      background: rgba(148, 163, 184, 0.25);
+    }
+
+    progress::-webkit-progress-value {
+      background: linear-gradient(120deg, #38bdf8 0%, #0ea5e9 100%);
+    }
+
+    progress::-moz-progress-bar {
+      background: linear-gradient(120deg, #38bdf8 0%, #0ea5e9 100%);
     }
 
     .results {
       margin-top: 2rem;
-      max-width: 720px;
+      display: none;
+      gap: 1rem;
     }
 
-    .results ul {
-      list-style: none;
-      padding: 0;
+    .results.active {
+      display: grid;
     }
 
-    .results li {
-      background: rgba(30, 41, 59, 0.8);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.5rem;
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(148, 163, 184, 0.2);
     }
 
-    a {
+    .summary strong {
+      font-size: 1.1rem;
+    }
+
+    .frames-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .frames-list li {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .frames-list a {
       color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .frames-list a:hover {
+      text-decoration: underline;
+    }
+
+    .empty-state {
+      opacity: 0.85;
+      font-style: italic;
+    }
+
+    @media (max-width: 720px) {
+      form {
+        padding: 1.25rem;
+      }
+
+      .frames-list li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha256-FER3YeliYg+6TSHI+b/xGaxmwoMPmxjSPdZRhqUWLWQ=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js" integrity="sha256-kbRxtY6Np7zKFGls0KqFrb0GApyy5HllHyx+2dZKZhE=" crossorigin="anonymous"></script>
 </head>
 <body>
-  <h1>NotebookLM Frame Extractor</h1>
-  <p>Upload an MP4 video exported from NotebookLM and receive unique frames with their indexes and timestamps.</p>
+  <main>
+    <h1>NotebookLM Frame Extractor</h1>
+    <p class="lead">
+      Select a NotebookLM-exported MP4 and extract only the visually distinct frames directly in your browser. No uploads leave your
+      device—the processing happens locally via the Canvas API.
+    </p>
 
-  <form id="upload-form">
-    <label for="video">Choose MP4 file</label>
-    <input type="file" id="video" name="video" accept="video/mp4" required>
-    <button type="submit">Upload &amp; Extract</button>
-  </form>
+    <form id="extract-form">
+      <fieldset>
+        <label>
+          Video file (MP4)
+          <input type="file" id="video-file" accept="video/mp4" required>
+        </label>
+        <label>
+          Difference threshold (0–255)
+          <input type="number" id="threshold" value="12" min="0" max="255" step="1">
+        </label>
+        <label>
+          Minimum seconds between saved frames
+          <input type="number" id="min-interval" value="0.15" min="0" step="0.05">
+        </label>
+        <label>
+          Fallback FPS estimate (for browsers without frame callbacks)
+          <input type="number" id="fallback-fps" value="30" min="1" step="1">
+        </label>
+      </fieldset>
+      <button type="submit">Extract frames</button>
+    </form>
 
-  <section class="results" id="results" hidden>
-    <h2>Extraction results</h2>
-    <p><strong>Job ID:</strong> <span id="job-id"></span></p>
-    <p><a id="download-link" href="#" download>Download all frames (.zip)</a></p>
-    <ul id="frames"></ul>
-  </section>
+    <section class="status" id="status-panel">
+      <h2>Status</h2>
+      <p id="status-text">Waiting for video…</p>
+      <progress id="progress" value="0" max="1"></progress>
+    </section>
+
+    <section class="results" id="results">
+      <div class="summary">
+        <div>
+          <strong id="summary-count">0 frames saved</strong>
+          <div id="summary-duration"></div>
+        </div>
+        <button id="download-zip" type="button" disabled>Download ZIP</button>
+      </div>
+      <ul class="frames-list" id="frames-list">
+        <li class="empty-state">No frames captured yet.</li>
+      </ul>
+    </section>
+  </main>
 
   <script>
-    const form = document.getElementById('upload-form');
-    const results = document.getElementById('results');
-    const jobIdEl = document.getElementById('job-id');
-    const downloadLink = document.getElementById('download-link');
-    const framesList = document.getElementById('frames');
+    const form = document.getElementById('extract-form');
+    const videoInput = document.getElementById('video-file');
+    const thresholdInput = document.getElementById('threshold');
+    const minIntervalInput = document.getElementById('min-interval');
+    const fallbackFpsInput = document.getElementById('fallback-fps');
+    const statusPanel = document.getElementById('status-panel');
+    const statusText = document.getElementById('status-text');
+    const progressEl = document.getElementById('progress');
+    const resultsSection = document.getElementById('results');
+    const framesList = document.getElementById('frames-list');
+    const summaryCount = document.getElementById('summary-count');
+    const summaryDuration = document.getElementById('summary-duration');
+    const downloadZipBtn = document.getElementById('download-zip');
+
+    let currentUrls = [];
+
+    function resetState() {
+      currentUrls.forEach((url) => URL.revokeObjectURL(url));
+      currentUrls = [];
+      framesList.innerHTML = '<li class="empty-state">No frames captured yet.</li>';
+      summaryCount.textContent = '0 frames saved';
+      summaryDuration.textContent = '';
+      downloadZipBtn.disabled = true;
+      progressEl.value = 0;
+      progressEl.max = 1;
+      statusPanel.classList.remove('active');
+      resultsSection.classList.remove('active');
+    }
+
+    function averageAbsoluteDifference(a, b) {
+      let total = 0;
+      const length = a.length;
+      for (let i = 0; i < length; i += 4) {
+        total += Math.abs(a[i] - b[i]);
+        total += Math.abs(a[i + 1] - b[i + 1]);
+        total += Math.abs(a[i + 2] - b[i + 2]);
+        // ignore alpha channel
+      }
+      const pixelCount = length / 4;
+      return total / (pixelCount * 3);
+    }
+
+    function formatTimestamp(seconds) {
+      const value = Number(seconds) || 0;
+      return value.toFixed(2) + 's';
+    }
+
+    function updateResultsSummary(frames, duration) {
+      const label = frames.length === 1 ? 'frame' : 'frames';
+      summaryCount.textContent = `${frames.length} ${label} saved`;
+      summaryDuration.textContent = duration ? `Processed ${duration.toFixed(2)}s of video` : '';
+    }
+
+    function addFrameListItem(frameInfo) {
+      if (framesList.querySelector('.empty-state')) {
+        framesList.innerHTML = '';
+      }
+
+      const item = document.createElement('li');
+      const meta = document.createElement('span');
+      meta.innerHTML = `Frame <strong>${frameInfo.index}</strong> at <strong>${formatTimestamp(frameInfo.timestamp)}</strong> (Δ=${frameInfo.diff.toFixed(2)})`;
+
+      const actions = document.createElement('div');
+      actions.style.display = 'flex';
+      actions.style.gap = '0.75rem';
+      actions.style.flexWrap = 'wrap';
+
+      const viewLink = document.createElement('a');
+      viewLink.href = frameInfo.url;
+      viewLink.target = '_blank';
+      viewLink.rel = 'noopener';
+      viewLink.textContent = 'Open';
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = frameInfo.url;
+      downloadLink.download = frameInfo.filename;
+      downloadLink.textContent = 'Download PNG';
+
+      actions.appendChild(viewLink);
+      actions.appendChild(downloadLink);
+
+      item.appendChild(meta);
+      item.appendChild(actions);
+      framesList.appendChild(item);
+    }
+
+    function captureFrame(canvas, index, timestamp, diff) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create PNG blob.'));
+            return;
+          }
+          const filename = `frame_${String(index).padStart(5, '0')}_t${timestamp.toFixed(2)}.png`;
+          const url = URL.createObjectURL(blob);
+          currentUrls.push(url);
+          resolve({ blob, url, filename, index, timestamp, diff });
+        }, 'image/png');
+      });
+    }
+
+    async function downloadZip(frames) {
+      if (!frames.length) return;
+      const zip = new JSZip();
+      const folder = zip.folder('frames');
+      frames.forEach((frame) => {
+        folder.file(frame.filename, frame.blob);
+      });
+      const manifest = frames.map((frame) => ({
+        frame: frame.index,
+        timestamp: Number(frame.timestamp.toFixed(3)),
+        filename: frame.filename,
+        diff: Number(frame.diff.toFixed(3))
+      }));
+      zip.file('frames.json', JSON.stringify(manifest, null, 2));
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, 'extracted_frames.zip');
+    }
+
+    function updateProgress(processed, total) {
+      progressEl.max = total || 1;
+      progressEl.value = Math.min(processed, total || processed || 1);
+    }
+
+    async function processWithFrameCallbacks(video, canvas, context, options) {
+      return new Promise((resolve, reject) => {
+        const frames = [];
+        let previousData = null;
+        let processedFrames = 0;
+        let lastSavedTime = -Infinity;
+        const { threshold, minInterval } = options;
+        let done = false;
+
+        const cleanup = () => {
+          video.pause();
+          done = true;
+        };
+
+        const handleError = (error) => {
+          cleanup();
+          reject(error);
+        };
+
+        const handleFrame = async (_, metadata) => {
+          if (done) return;
+          processedFrames = metadata.presentedFrames;
+          updateProgress(processedFrames, metadata.expectedDisplayTime ? undefined : undefined);
+
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const diff = previousData ? averageAbsoluteDifference(imageData.data, previousData.data) : Number.POSITIVE_INFINITY;
+          const timestamp = metadata.mediaTime;
+
+          statusText.textContent = `Processed ${processedFrames} frames — current time ${formatTimestamp(timestamp)}`;
+
+          if (!previousData || diff >= threshold && (timestamp - lastSavedTime) >= minInterval) {
+            try {
+              const frame = await captureFrame(canvas, metadata.presentedFrames, timestamp, diff === Number.POSITIVE_INFINITY ? 0 : diff);
+              frames.push(frame);
+              addFrameListItem(frame);
+              updateResultsSummary(frames, metadata.mediaTime);
+              lastSavedTime = timestamp;
+            } catch (error) {
+              handleError(error);
+              return;
+            }
+          }
+
+          previousData = imageData;
+
+          if (video.ended || timestamp >= video.duration) {
+            cleanup();
+            resolve({ frames, processedFrames, duration: video.duration });
+            return;
+          }
+
+          video.requestVideoFrameCallback(handleFrame);
+        };
+
+        video.addEventListener('error', () => handleError(video.error || new Error('Video error')));
+        video.addEventListener('ended', () => {
+          if (!done) {
+            cleanup();
+            resolve({ frames, processedFrames, duration: video.duration });
+          }
+        });
+
+        video.requestVideoFrameCallback(handleFrame);
+        video.play().catch(handleError);
+      });
+    }
+
+    function seek(video, time) {
+      return new Promise((resolve, reject) => {
+        const handleSeeked = () => {
+          video.removeEventListener('seeked', handleSeeked);
+          video.removeEventListener('error', handleError);
+          resolve();
+        };
+        const handleError = () => {
+          video.removeEventListener('seeked', handleSeeked);
+          video.removeEventListener('error', handleError);
+          reject(video.error || new Error('Seek failed'));
+        };
+        video.addEventListener('seeked', handleSeeked);
+        video.addEventListener('error', handleError);
+        video.currentTime = Math.min(time, video.duration);
+      });
+    }
+
+    async function processWithTimeStepping(video, canvas, context, options) {
+      const { threshold, minInterval, fallbackFps } = options;
+      const frameDuration = 1 / fallbackFps;
+      const frames = [];
+      let previousData = null;
+      let lastSavedTime = -Infinity;
+      let processedFrames = 0;
+      const totalFrames = Math.ceil(video.duration / frameDuration);
+
+      for (let i = 0; i <= totalFrames; i++) {
+        const currentTime = Math.min(i * frameDuration, video.duration);
+        await seek(video, currentTime);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const diff = previousData ? averageAbsoluteDifference(imageData.data, previousData.data) : Number.POSITIVE_INFINITY;
+        const timestamp = video.currentTime;
+
+        processedFrames = i + 1;
+        updateProgress(processedFrames, totalFrames);
+        statusText.textContent = `Processed ${processedFrames} / ${totalFrames} frames — current time ${formatTimestamp(timestamp)}`;
+
+        if (!previousData || diff >= threshold && (timestamp - lastSavedTime) >= minInterval) {
+          const frame = await captureFrame(canvas, processedFrames, timestamp, diff === Number.POSITIVE_INFINITY ? 0 : diff);
+          frames.push(frame);
+          addFrameListItem(frame);
+          updateResultsSummary(frames, video.duration);
+          lastSavedTime = timestamp;
+        }
+
+        previousData = imageData;
+      }
+
+      return { frames, processedFrames, duration: video.duration };
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const fileInput = document.getElementById('video');
-      if (!fileInput.files.length) {
-        alert('Please select an MP4 file first.');
+
+      const file = videoInput.files?.[0];
+      if (!file) {
+        alert('Please select an MP4 video file first.');
         return;
       }
 
-      const submitButton = form.querySelector('button[type="submit"]');
-      submitButton.disabled = true;
-      submitButton.textContent = 'Processing…';
+      resetState();
+      statusPanel.classList.add('active');
+      statusText.textContent = 'Loading video metadata…';
+
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
 
       try {
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        const threshold = Number(thresholdInput.value) || 0;
+        const minInterval = Math.max(0, Number(minIntervalInput.value) || 0);
+        const fallbackFps = Math.max(1, Number(fallbackFpsInput.value) || 30);
 
-        const response = await fetch('/upload', {
-          method: 'POST',
-          body: formData
+        const video = document.createElement('video');
+        video.preload = 'auto';
+        video.crossOrigin = 'anonymous';
+        video.playsInline = true;
+        video.muted = true;
+        video.src = URL.createObjectURL(file);
+
+        await new Promise((resolve, reject) => {
+          const onLoaded = () => {
+            video.removeEventListener('loadedmetadata', onLoaded);
+            video.removeEventListener('error', onError);
+            resolve();
+          };
+          const onError = () => {
+            video.removeEventListener('loadedmetadata', onLoaded);
+            video.removeEventListener('error', onError);
+            reject(video.error || new Error('Unable to load video metadata.'));
+          };
+          video.addEventListener('loadedmetadata', onLoaded);
+          video.addEventListener('error', onError);
         });
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || 'Upload failed.');
+        statusText.textContent = `Video duration ${formatTimestamp(video.duration)} — starting extraction…`;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) {
+          throw new Error('Unable to access 2D canvas context.');
         }
 
-        const data = await response.json();
-        results.hidden = false;
-        jobIdEl.textContent = data.job_id;
-        downloadLink.href = data.download_url;
-        framesList.innerHTML = '';
+        resultsSection.classList.add('active');
+        downloadZipBtn.disabled = true;
 
-        data.frames.forEach((frame) => {
-          const item = document.createElement('li');
-          const timestamp = frame.timestamp.toFixed(2);
-          item.innerHTML = `Frame <strong>${frame.frame}</strong> at <strong>${timestamp}s</strong> — ` +
-            `<a href="/results/${data.job_id}/frames/${frame.filename}" target="_blank">view</a>`;
-          framesList.appendChild(item);
-        });
+        const options = { threshold, minInterval, fallbackFps };
+        const supportsFrameCallbacks = typeof video.requestVideoFrameCallback === 'function';
+        const { frames, processedFrames, duration } = supportsFrameCallbacks
+          ? await processWithFrameCallbacks(video, canvas, context, options)
+          : await processWithTimeStepping(video, canvas, context, options);
+
+        updateResultsSummary(frames, duration);
+        statusText.textContent = `Finished: ${processedFrames} frames processed.`;
+        progressEl.value = progressEl.max;
+
+        if (frames.length) {
+          downloadZipBtn.disabled = false;
+          downloadZipBtn.onclick = () => downloadZip(frames);
+        } else {
+          const note = document.createElement('li');
+          note.className = 'empty-state';
+          note.textContent = 'No frames passed the configured difference threshold. Try lowering the threshold value.';
+          framesList.appendChild(note);
+        }
       } catch (error) {
-        alert(error.message);
+        console.error(error);
+        alert(error.message || 'Failed to process the video.');
+        resetState();
       } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Upload & Extract';
+        button.disabled = false;
       }
     });
   </script>
