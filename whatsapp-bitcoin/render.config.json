@@ -1,0 +1,19 @@
+{
+  "compositions": [
+    {
+      "id": "LinkedInCinematic",
+      "output": "linkedin-cinematic.mp4",
+      "enabled": true
+    },
+    {
+      "id": "EvolvingMotion",
+      "output": "evolving-motion.mp4",
+      "enabled": false
+    },
+    {
+      "id": "WhatsAppConversation",
+      "output": "whatsapp-bitcoin.mp4",
+      "enabled": false
+    }
+  ]
+}
