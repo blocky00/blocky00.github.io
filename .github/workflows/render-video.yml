@@ -3,16 +3,21 @@ name: Render WhatsApp Bitcoin Video
 on:
   push:
     branches:
-      - claude/add-remotion-skills-tTQqk
+      - main
     paths:
-      - 'whatsapp-bitcoin/**'
+      - 'whatsapp-bitcoin/src/**'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   render:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
