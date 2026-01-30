@@ -2,6 +2,7 @@ import {Composition} from 'remotion';
 import {WhatsAppConversation} from './WhatsAppConversation';
 import {EvolvingMotion} from './EvolvingMotion';
 import {LinkedInCinematic} from './LinkedInCinematic';
+import {SlackLinkedInRoast} from './SlackLinkedInRoast';
 
 export const RemotionRoot = () => {
   return (
@@ -29,6 +30,14 @@ export const RemotionRoot = () => {
         fps={30}
         width={1080}
         height={1350}
+      />
+      <Composition
+        id="SlackLinkedInRoast"
+        component={SlackLinkedInRoast}
+        durationInFrames={750}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );
