@@ -1,0 +1,14 @@
+{
+  "compositions": [
+    {
+      "id": "EvolvingMotion",
+      "output": "evolving-motion.mp4",
+      "enabled": true
+    },
+    {
+      "id": "WhatsAppConversation",
+      "output": "whatsapp-bitcoin.mp4",
+      "enabled": false
+    }
+  ]
+}

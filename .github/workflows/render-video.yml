@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'whatsapp-bitcoin/src/**'
+      - 'whatsapp-bitcoin/render.config.json'
   workflow_dispatch:
 
 jobs:
@@ -25,16 +26,33 @@ jobs:
         working-directory: whatsapp-bitcoin
         run: npm ci
 
-      - name: Render WhatsApp Bitcoin video
+      - name: Render enabled compositions
         working-directory: whatsapp-bitcoin
-        run: npx remotion render WhatsAppConversation out/whatsapp-bitcoin.mp4
+        run: |
+          # Read config and render only enabled compositions
+          node -e "
+            const config = require('./render.config.json');
+            const { execSync } = require('child_process');
 
-      - name: Render Evolving Motion video
-        working-directory: whatsapp-bitcoin
-        run: npx remotion render EvolvingMotion out/evolving-motion.mp4
+            const enabled = config.compositions.filter(c => c.enabled);
+
+            if (enabled.length === 0) {
+              console.log('No compositions enabled for rendering.');
+              process.exit(0);
+            }
+
+            console.log('Rendering ' + enabled.length + ' composition(s)...\n');
+
+            for (const comp of enabled) {
+              console.log('→ Rendering: ' + comp.id + ' -> out/' + comp.output);
+              execSync('npx remotion render ' + comp.id + ' out/' + comp.output, { stdio: 'inherit' });
+              console.log('✓ Done: ' + comp.output + '\n');
+            }
+          "
 
       - name: Upload videos artifact
         uses: actions/upload-artifact@v4
         with:
           name: remotion-videos
           path: whatsapp-bitcoin/out/*.mp4
+          if-no-files-found: warn
