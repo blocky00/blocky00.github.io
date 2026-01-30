@@ -1,11 +1,11 @@
-name: Render WhatsApp Bitcoin Video
+name: Render Remotion Videos
 
 on:
   push:
     branches:
-      - claude/add-remotion-skills-tTQqk
+      - main
     paths:
-      - 'whatsapp-bitcoin/**'
+      - 'whatsapp-bitcoin/src/**'
   workflow_dispatch:
 
 jobs:
@@ -25,20 +25,16 @@ jobs:
         working-directory: whatsapp-bitcoin
         run: npm ci
 
-      - name: Render video
+      - name: Render WhatsApp Bitcoin video
         working-directory: whatsapp-bitcoin
-        run: npm run render
+        run: npx remotion render WhatsAppConversation out/whatsapp-bitcoin.mp4
 
-      - name: Upload video artifact
+      - name: Render Evolving Motion video
+        working-directory: whatsapp-bitcoin
+        run: npx remotion render EvolvingMotion out/evolving-motion.mp4
+
+      - name: Upload videos artifact
         uses: actions/upload-artifact@v4
         with:
-          name: whatsapp-bitcoin-video
-          path: whatsapp-bitcoin/out/video.mp4
-
-      - name: Commit video to repo
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add whatsapp-bitcoin/out/video.mp4
-          git commit -m "Add rendered WhatsApp Bitcoin video" || echo "No changes to commit"
-          git push
+          name: remotion-videos
+          path: whatsapp-bitcoin/out/*.mp4
