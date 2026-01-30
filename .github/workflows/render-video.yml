@@ -1,0 +1,44 @@
+name: Render WhatsApp Bitcoin Video
+
+on:
+  push:
+    branches:
+      - claude/add-remotion-skills-tTQqk
+    paths:
+      - 'whatsapp-bitcoin/**'
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: whatsapp-bitcoin/package-lock.json
+
+      - name: Install dependencies
+        working-directory: whatsapp-bitcoin
+        run: npm ci
+
+      - name: Render video
+        working-directory: whatsapp-bitcoin
+        run: npm run render
+
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: whatsapp-bitcoin-video
+          path: whatsapp-bitcoin/out/video.mp4
+
+      - name: Commit video to repo
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add whatsapp-bitcoin/out/video.mp4
+          git commit -m "Add rendered WhatsApp Bitcoin video" || echo "No changes to commit"
+          git push
