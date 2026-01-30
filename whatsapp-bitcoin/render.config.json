@@ -1,9 +1,14 @@
 {
   "compositions": [
     {
+      "id": "LinkedInCinematic",
+      "output": "linkedin-cinematic.mp4",
+      "enabled": true
+    },
+    {
       "id": "EvolvingMotion",
       "output": "evolving-motion.mp4",
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "WhatsAppConversation",
