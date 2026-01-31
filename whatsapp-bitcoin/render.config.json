@@ -1,9 +1,14 @@
 {
   "compositions": [
     {
+      "id": "SlackLinkedInRoast",
+      "output": "slack-linkedin-roast.mp4",
+      "enabled": true
+    },
+    {
       "id": "LinkedInCinematic",
       "output": "linkedin-cinematic.mp4",
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "EvolvingMotion",
