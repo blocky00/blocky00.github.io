@@ -1,9 +1,14 @@
 {
   "compositions": [
     {
+      "id": "CyberpunkCatChat",
+      "output": "cyberpunk-cat-chat.mp4",
+      "enabled": true
+    },
+    {
       "id": "SlackLinkedInRoast",
       "output": "slack-linkedin-roast.mp4",
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "LinkedInCinematic",

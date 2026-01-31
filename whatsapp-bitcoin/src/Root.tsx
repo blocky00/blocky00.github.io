@@ -3,6 +3,7 @@ import {WhatsAppConversation} from './WhatsAppConversation';
 import {EvolvingMotion} from './EvolvingMotion';
 import {LinkedInCinematic} from './LinkedInCinematic';
 import {SlackLinkedInRoast} from './SlackLinkedInRoast';
+import {CyberpunkCatChat} from './CyberpunkCatChat';
 
 export const RemotionRoot = () => {
   return (
@@ -35,6 +36,14 @@ export const RemotionRoot = () => {
         id="SlackLinkedInRoast"
         component={SlackLinkedInRoast}
         durationInFrames={750}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="CyberpunkCatChat"
+        component={CyberpunkCatChat}
+        durationInFrames={900}
         fps={30}
         width={1920}
         height={1080}

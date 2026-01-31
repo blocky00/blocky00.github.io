@@ -2,6 +2,7 @@
 
 ## Git Workflow (IMPORTANT)
 
+- **Branch naming:** Use descriptive names like `claude/add-cyberpunk-cat-video-{sessionId}` or `claude/fix-render-config-{sessionId}`
 - **Always rebase before pushing:** `git fetch origin main && git rebase origin/main`
 - **Force push after rebasing:** `git push --force-with-lease` (history changes require this)
 - **Why conflicts happen:** PRs get merged while your branch is behind main - same files modified in both places
