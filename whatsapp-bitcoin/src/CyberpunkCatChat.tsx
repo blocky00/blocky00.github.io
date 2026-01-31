@@ -36,7 +36,7 @@ const messages: Array<{
   text: string;
   emoji?: string;
 }> = [
-  {id: 1, sender: 'stefan', text: "Hey Whiskers, I keep getting merge conflicts 😩"},
+  {id: 1, sender: 'stefan', text: "Hey Teo, I keep getting merge conflicts 😩"},
   {id: 2, sender: 'cat', text: "meow... have you tried rebasing?", emoji: "🐱"},
   {id: 3, sender: 'stefan', text: "Rebasing? What's that?"},
   {id: 4, sender: 'cat', text: "git fetch origin main", emoji: "⌨️"},
@@ -355,7 +355,7 @@ const MessageBubble3D = ({
               letterSpacing: 1,
             }}
           >
-            {isCat ? 'Whiskers' : 'Stefan'}
+            {isCat ? 'Teo' : 'Stefan'}
           </span>
         </div>
 
@@ -652,7 +652,7 @@ export const CyberpunkCatChat = () => {
                       color: 'white',
                     }}
                   >
-                    Whiskers
+                    Teo
                   </div>
                 </GlitchText>
                 <div style={{fontSize: 14, color: 'rgba(255,255,255,0.5)'}}>
