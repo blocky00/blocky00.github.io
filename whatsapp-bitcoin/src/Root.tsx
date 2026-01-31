@@ -5,6 +5,7 @@ import {LinkedInCinematic} from './LinkedInCinematic';
 import {SlackLinkedInRoast} from './SlackLinkedInRoast';
 import {CyberpunkCatChat} from './CyberpunkCatChat';
 import {RemotionShowreel} from './RemotionShowreel';
+import {MunichToBerlinMap} from './MunichToBerlinMap';
 
 export const RemotionRoot = () => {
   return (
@@ -56,6 +57,14 @@ export const RemotionRoot = () => {
         fps={30}
         width={1080}
         height={1920}
+      />
+      <Composition
+        id="MunichToBerlinMap"
+        component={MunichToBerlinMap}
+        durationInFrames={450}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );

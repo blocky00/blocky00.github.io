@@ -29,6 +29,11 @@
       "id": "WhatsAppConversation",
       "output": "whatsapp-bitcoin.mp4",
       "enabled": false
+    },
+    {
+      "id": "MunichToBerlinMap",
+      "output": "munich-berlin-map.mp4",
+      "enabled": true
     }
   ]
 }
