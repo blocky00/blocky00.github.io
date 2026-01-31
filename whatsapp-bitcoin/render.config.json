@@ -1,9 +1,14 @@
 {
   "compositions": [
     {
+      "id": "RemotionShowreel",
+      "output": "remotion-showreel.mp4",
+      "enabled": true
+    },
+    {
       "id": "CyberpunkCatChat",
       "output": "cyberpunk-cat-chat.mp4",
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "SlackLinkedInRoast",

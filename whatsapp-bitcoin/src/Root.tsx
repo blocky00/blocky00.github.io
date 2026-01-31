@@ -4,6 +4,7 @@ import {EvolvingMotion} from './EvolvingMotion';
 import {LinkedInCinematic} from './LinkedInCinematic';
 import {SlackLinkedInRoast} from './SlackLinkedInRoast';
 import {CyberpunkCatChat} from './CyberpunkCatChat';
+import {RemotionShowreel} from './RemotionShowreel';
 
 export const RemotionRoot = () => {
   return (
@@ -47,6 +48,14 @@ export const RemotionRoot = () => {
         fps={30}
         width={1920}
         height={1080}
+      />
+      <Composition
+        id="RemotionShowreel"
+        component={RemotionShowreel}
+        durationInFrames={900}
+        fps={30}
+        width={1080}
+        height={1920}
       />
     </>
   );
