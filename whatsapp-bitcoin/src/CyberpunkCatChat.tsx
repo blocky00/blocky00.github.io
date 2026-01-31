@@ -299,6 +299,9 @@ const MessageBubble3D = ({
         justifyContent: isCat ? 'flex-start' : 'flex-end',
         marginBottom: 20,
         perspective: 1000,
+        // FIX: give each message a consistent height so scrolling steps are predictable
+        minHeight: 140,
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -554,6 +557,25 @@ export const CyberpunkCatChat = () => {
   // Messages visibility
   const chatStartFrame = titleDuration;
 
+  // SCROLLING LOGIC
+  // Each message is given a fixed minHeight in MessageBubble3D (140px)
+  const messageHeight = 140;
+  const visibleCount = 5; // how many messages should remain visible before scrolling
+  const elapsedSinceChatStart = Math.max(0, frame - chatStartFrame);
+  const currentIndex = Math.min(messages.length - 1, Math.floor(elapsedSinceChatStart / framesPerMessage));
+  // when currentIndex exceeds visibleCount - 1, start scrolling
+  const scrollIndex = Math.max(0, currentIndex - (visibleCount - 1));
+
+  // trigger frame when the scroll step should start animating
+  const scrollTriggerFrame = chatStartFrame + (scrollIndex + (visibleCount - 1)) * framesPerMessage;
+  const scrollProgress = interpolate(
+    frame,
+    [scrollTriggerFrame, scrollTriggerFrame + 8],
+    [0, 1],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}
+  );
+  const translateY = -(scrollIndex * messageHeight + scrollProgress * messageHeight);
+
   return (
     <AbsoluteFill
       style={{
@@ -614,7 +636,7 @@ export const CyberpunkCatChat = () => {
               boxShadow: '0 0 50px rgba(255, 50, 200, 0.2), inset 0 0 30px rgba(0,0,0,0.5)',
               padding: 30,
               maxHeight: '100%',
-              overflow: 'hidden',
+              overflow: 'hidden', // keep overflow hidden for video; we animate translateY instead
             }}
           >
             {/* Chat header */}
@@ -661,17 +683,26 @@ export const CyberpunkCatChat = () => {
               </div>
             </div>
 
-            {/* Messages */}
-            {messages.map((message, index) => {
-              const messageStart = chatStartFrame + index * framesPerMessage;
-              if (frame < messageStart) return null;
+            {/* Messages - wrap in a container we translate for auto-scrolling */}
+            <div
+              style={{
+                position: 'relative',
+                // translate the whole list up as new messages appear
+                transform: `translateY(${translateY}px)`,
+                transition: 'transform 0s', // remotion animation uses frame-based interpolation; keep no CSS transition
+              }}
+            >
+              {messages.map((message, index) => {
+                const messageStart = chatStartFrame + index * framesPerMessage;
+                if (frame < messageStart) return null;
 
-              return (
-                <Sequence key={message.id} from={messageStart} layout="none">
-                  <MessageBubble3D message={message} index={index} />
-                </Sequence>
-              );
-            })}
+                return (
+                  <Sequence key={message.id} from={messageStart} layout="none">
+                    <MessageBubble3D message={message} index={index} />
+                  </Sequence>
+                );
+              })}
+            </div>
           </div>
         </div>
       </ParallaxLayer>
