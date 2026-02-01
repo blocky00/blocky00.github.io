@@ -38,7 +38,7 @@
     {
       "id": "MunichToBerlinMap",
       "output": "munich-berlin-map.mp4",
-      "enabled": true
+      "enabled": false
     }
   ]
 }
