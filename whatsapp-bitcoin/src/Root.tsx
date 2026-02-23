@@ -6,6 +6,7 @@ import {SlackLinkedInRoast} from './SlackLinkedInRoast';
 import {CyberpunkCatChat} from './CyberpunkCatChat';
 import {RemotionShowreel} from './RemotionShowreel';
 import {MunichBerlinMap} from './MunichBerlinMap';
+import {ContentIsLiquid} from './ContentIsLiquid';
 
 export const RemotionRoot = () => {
   return (
@@ -65,6 +66,14 @@ export const RemotionRoot = () => {
         fps={30}
         width={1080}
         height={1920}
+      />
+      <Composition
+        id="ContentIsLiquid"
+        component={ContentIsLiquid}
+        durationInFrames={900}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );
