@@ -168,6 +168,19 @@ function cBez(
 }
 
 // =====================================================
+// SNIPKI BRAND COLORS (mint/teal theme)
+// =====================================================
+const BRAND = {
+  primary: '#5DC9A8',      // Main mint green
+  light: '#6DD4B3',        // Lighter mint
+  lighter: '#7EDFC0',      // Even lighter
+  lightest: '#8FEACD',     // Lightest for chevrons
+  dark: '#4AB896',         // Darker accent
+  white: '#FFFFFF',
+  shadow: 'rgba(0,80,60,0.15)',
+};
+
+// =====================================================
 // SVG DEFS (filters, gradients)
 // =====================================================
 const SvgDefs = () => (
@@ -187,92 +200,80 @@ const SvgDefs = () => (
       </feMerge>
     </filter>
     <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="12" floodColor="rgba(0,0,0,0.6)" />
+      <feDropShadow dx="0" dy="6" stdDeviation="16" floodColor={BRAND.shadow} />
     </filter>
-    <radialGradient id="bgGrad" cx="50%" cy="45%" r="60%">
-      <stop offset="0%" stopColor="#1a2055" />
-      <stop offset="100%" stopColor="#080c1e" />
-    </radialGradient>
   </defs>
 );
 
 // =====================================================
-// LIQUID WAVE BACKGROUND
+// GEOMETRIC BACKGROUND (mint green with chevron pattern)
 // =====================================================
-const LiquidBackground = ({frame}: {frame: number}) => {
-  const wave = (
-    x: number,
-    amplitude: number,
-    wavelength: number,
-    speed: number,
-    phase: number,
-    baseY: number,
-  ) =>
-    baseY +
-    amplitude * Math.sin(((x / wavelength + frame * speed + phase) * Math.PI * 2));
-
-  const buildWavePath = (
-    amplitude: number,
-    wavelength: number,
-    speed: number,
-    phase: number,
-    baseY: number,
-  ) => {
-    let d = `M 0 ${H}`;
-    for (let x = 0; x <= W; x += 12) {
-      d += ` L ${x} ${wave(x, amplitude, wavelength, speed, phase, baseY)}`;
-    }
-    d += ` L ${W} ${H} Z`;
-    return d;
-  };
+const GeometricBackground = ({frame}: {frame: number}) => {
+  // Subtle animation for chevrons
+  const drift = Math.sin(frame / 120) * 8;
 
   return (
-    <svg
-      width={W}
-      height={H}
-      style={{position: 'absolute', inset: 0}}
-    >
-      <rect width={W} height={H} fill="url(#bgGrad)" />
-      {/* Subtle grid */}
-      {Array.from({length: 20}).map((_, i) => (
-        <React.Fragment key={i}>
-          <line
-            x1={i * 100}
-            y1={0}
-            x2={i * 100}
-            y2={H}
-            stroke="rgba(255,255,255,0.025)"
-            strokeWidth={1}
-          />
-          <line
-            x1={0}
-            y1={i * 60}
-            x2={W}
-            y2={i * 60}
-            stroke="rgba(255,255,255,0.025)"
-            strokeWidth={1}
-          />
-        </React.Fragment>
-      ))}
-      {/* Liquid waves at bottom */}
-      <path
-        d={buildWavePath(22, 400, 0.004, 0, H * 0.82)}
-        fill="rgba(59,130,246,0.07)"
-      />
-      <path
-        d={buildWavePath(18, 320, 0.005, 0.33, H * 0.86)}
-        fill="rgba(139,92,246,0.06)"
-      />
-      <path
-        d={buildWavePath(14, 260, 0.006, 0.66, H * 0.9)}
-        fill="rgba(16,185,129,0.05)"
-      />
-    </svg>
+    <div style={{position: 'absolute', inset: 0, background: BRAND.primary, overflow: 'hidden'}}>
+      {/* Chevron pattern on right side */}
+      <svg
+        width={W}
+        height={H}
+        style={{position: 'absolute', inset: 0}}
+        viewBox={`0 0 ${W} ${H}`}
+      >
+        {/* Large chevron shapes - right side */}
+        {/* Top right chevron pointing right */}
+        <polygon
+          points={`${W - 450 + drift},0 ${W},0 ${W},280 ${W - 280 + drift},280`}
+          fill={BRAND.light}
+          opacity={0.6}
+        />
+        {/* Second chevron band */}
+        <rect
+          x={W - 450 + drift}
+          y={320}
+          width={450}
+          height={80}
+          fill={BRAND.lighter}
+          opacity={0.5}
+        />
+        {/* Third chevron band */}
+        <rect
+          x={W - 450 + drift}
+          y={420}
+          width={450}
+          height={80}
+          fill={BRAND.light}
+          opacity={0.4}
+        />
+        {/* Fourth chevron band */}
+        <rect
+          x={W - 450 + drift}
+          y={520}
+          width={450}
+          height={80}
+          fill={BRAND.lighter}
+          opacity={0.35}
+        />
+        {/* Bottom right chevron pointing right */}
+        <polygon
+          points={`${W - 380 + drift},${H - 220} ${W},${H - 220} ${W},${H} ${W - 220 + drift},${H}`}
+          fill={BRAND.lightest}
+          opacity={0.4}
+        />
+        {/* Arrow/chevron shape */}
+        <polygon
+          points={`${W - 320 + drift},160 ${W - 180 + drift},280 ${W - 320 + drift},400`}
+          fill={BRAND.lightest}
+          opacity={0.5}
+        />
+      </svg>
+    </div>
   );
 };
 
 // =====================================================
-// NODE CARD
+// NODE CARD (white cards on mint background)
 // =====================================================
 const NodeCard = ({
   node,
@@ -305,57 +306,48 @@ const NodeCard = ({
       transform={`translate(${node.x},${node.y}) scale(${scale}) translate(${-node.x},${-node.y})`}
       opacity={opacity}
     >
-      {/* Outer glow ring */}
-      <rect
-        x={x - 3}
-        y={y - 3}
-        width={CARD_W + 6}
-        height={CARD_H + 6}
-        rx={21}
-        fill="none"
-        stroke={node.color}
-        strokeWidth={1.5}
-        opacity={0.4}
-        filter="url(#glow)"
-      />
-      {/* Card background */}
+      {/* Card background - WHITE */}
       <rect
         x={x}
         y={y}
         width={CARD_W}
         height={CARD_H}
-        rx={18}
-        fill="rgba(8,12,40,0.88)"
-        stroke={node.color}
-        strokeWidth={2}
+        rx={16}
+        fill={BRAND.white}
         filter="url(#cardShadow)"
       />
-      {/* Color bar accent */}
+      {/* Left color accent bar */}
       <rect
         x={x}
         y={y}
-        width={CARD_W}
-        height={7}
-        rx={18}
+        width={6}
+        height={CARD_H}
+        rx={16}
         fill={node.color}
-        opacity={0.9}
+      />
+      <rect
+        x={x}
+        y={y + 16}
+        width={6}
+        height={CARD_H - 32}
+        fill={node.color}
       />
       {/* Emoji */}
       <text
-        x={node.x - 75}
+        x={node.x - 70}
         y={node.y - 32}
-        fontSize={38}
+        fontSize={36}
         textAnchor="middle"
         dominantBaseline="middle"
       >
         {node.emoji}
       </text>
-      {/* Label */}
+      {/* Label - dark text */}
       <text
-        x={node.x + 18}
+        x={node.x + 20}
         y={node.y - 32}
-        fill="white"
-        fontSize={30}
+        fill="#2D3748"
+        fontSize={28}
         fontWeight="800"
         fontFamily="system-ui, -apple-system, sans-serif"
         dominantBaseline="middle"
@@ -364,25 +356,23 @@ const NodeCard = ({
       </text>
       {/* Divider */}
       <line
-        x1={x + 16}
-        y1={node.y - 10}
-        x2={x + CARD_W - 16}
-        y2={node.y - 10}
-        stroke={node.color}
+        x1={x + 20}
+        y1={node.y - 8}
+        x2={x + CARD_W - 20}
+        y2={node.y - 8}
+        stroke="#E2E8F0"
         strokeWidth={1}
-        opacity={0.4}
       />
-      {/* Variants */}
+      {/* Variants - muted text */}
       {node.variants.map((v, i) => (
         <text
           key={v}
-          x={x + 22}
-          y={node.y + 10 + i * 30}
-          fill={node.color}
-          fontSize={19}
+          x={x + 26}
+          y={node.y + 16 + i * 28}
+          fill="#718096"
+          fontSize={17}
           fontFamily="system-ui, -apple-system, sans-serif"
           dominantBaseline="middle"
-          opacity={0.9}
         >
           · {v}
         </text>
@@ -392,7 +382,7 @@ const NodeCard = ({
 };
 
 // =====================================================
-// VARIATION LOOP (red self-referencing arc above node)
+// VARIATION LOOP (white self-referencing arc above node)
 // =====================================================
 const VariationLoop = ({
   nodeId,
@@ -436,22 +426,25 @@ const VariationLoop = ({
 
   const loopPath = `M ${P0[0]} ${P0[1]} C ${P1[0]} ${P1[1]} ${P2[0]} ${P2[1]} ${P3[0]} ${P3[1]}`;
 
+  // Use white for the loop (stands out on mint)
+  const loopColor = BRAND.white;
+
   return (
     <g opacity={opacity}>
-      {/* Glow */}
+      {/* Subtle shadow */}
       <path
         d={loopPath}
         fill="none"
-        stroke="rgba(239,68,68,0.35)"
-        strokeWidth={10}
+        stroke="rgba(0,80,60,0.2)"
+        strokeWidth={8}
         strokeDasharray={DASH}
         strokeDashoffset={dashOffset}
       />
-      {/* Main arc */}
+      {/* Main arc - white */}
       <path
         d={loopPath}
         fill="none"
-        stroke="#EF4444"
+        stroke={loopColor}
         strokeWidth={3.5}
         strokeLinecap="round"
         strokeDasharray={DASH}
@@ -461,7 +454,7 @@ const VariationLoop = ({
       {progress > 0.05 && progress < 0.98 && (
         <polygon
           points="-6,0 6,0 0,10"
-          fill="#EF4444"
+          fill={loopColor}
           transform={`translate(${tipX},${tipY}) rotate(${angle + 90})`}
         />
       )}
@@ -469,7 +462,7 @@ const VariationLoop = ({
       {progress >= 0.98 && (
         <polygon
           points="-6,0 6,0 0,10"
-          fill="#EF4444"
+          fill={loopColor}
           transform={`translate(${P3[0]},${P3[1]}) rotate(${120})`}
         />
       )}
@@ -478,7 +471,7 @@ const VariationLoop = ({
 };
 
 // =====================================================
-// TRANSFORMATION ARROW (blue, between nodes)
+// TRANSFORMATION ARROW (white, between nodes)
 // =====================================================
 const TransformArrow = ({
   conn,
@@ -524,22 +517,25 @@ const TransformArrow = ({
   const [prevX, prevY] = qBez(Math.max(0, progress - dt), P0, P1, P2);
   const angle = (Math.atan2(tipY - prevY, tipX - prevX) * 180) / Math.PI;
 
+  // White arrows on mint background
+  const arrowColor = BRAND.white;
+
   return (
     <g opacity={opacity}>
-      {/* Glow layer */}
+      {/* Subtle shadow */}
       <path
         d={pathStr}
         fill="none"
-        stroke="rgba(59,130,246,0.3)"
-        strokeWidth={12}
+        stroke="rgba(0,80,60,0.15)"
+        strokeWidth={10}
         strokeDasharray={DASH}
         strokeDashoffset={dashOffset}
       />
-      {/* Main arrow line */}
+      {/* Main arrow line - white */}
       <path
         d={pathStr}
         fill="none"
-        stroke="#3B82F6"
+        stroke={arrowColor}
         strokeWidth={3}
         strokeLinecap="round"
         strokeDasharray={DASH}
@@ -549,8 +545,7 @@ const TransformArrow = ({
       {progress > 0.04 && progress < 0.97 && (
         <polygon
           points="-5,0 5,0 0,10"
-          fill="#3B82F6"
-          filter="url(#softGlow)"
+          fill={arrowColor}
           transform={`translate(${tipX},${tipY}) rotate(${angle + 90})`}
         />
       )}
@@ -558,7 +553,7 @@ const TransformArrow = ({
       {progress >= 0.97 && (
         <polygon
           points="-5,0 5,0 0,10"
-          fill="#3B82F6"
+          fill={arrowColor}
           transform={`translate(${end.x},${end.y}) rotate(${angle + 90})`}
         />
       )}
@@ -596,21 +591,20 @@ const FlowParticle = ({
     [end.x, end.y],
   );
 
-  const node = getNode(conn.from);
   return (
     <circle
       cx={px}
       cy={py}
       r={5}
-      fill={node.color}
-      opacity={0.75}
+      fill={BRAND.white}
+      opacity={0.85}
       filter="url(#softGlow)"
     />
   );
 };
 
 // =====================================================
-// TITLE OVERLAY
+// TITLE OVERLAY (white on mint)
 // =====================================================
 const TitleOverlay = ({frame, fps}: {frame: number; fps: number}) => {
   // Show title at start and fade out
@@ -655,21 +649,22 @@ const TitleOverlay = ({frame, fps}: {frame: number; fps: number}) => {
               fontSize: 96,
               fontWeight: 900,
               fontFamily: 'system-ui, -apple-system, sans-serif',
-              color: 'white',
-              letterSpacing: '-2px',
-              textShadow: '0 0 80px rgba(59,130,246,0.8), 0 4px 20px rgba(0,0,0,0.5)',
+              fontStyle: 'italic',
+              color: BRAND.white,
+              letterSpacing: '-1px',
+              textShadow: '0 4px 30px rgba(0,80,60,0.3)',
             }}
           >
             Content is Liquid
           </div>
           <div
             style={{
-              fontSize: 32,
-              fontWeight: 400,
-              color: 'rgba(255,255,255,0.6)',
-              marginTop: 16,
+              fontSize: 28,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.8)',
+              marginTop: 20,
               fontFamily: 'system-ui, -apple-system, sans-serif',
-              letterSpacing: '2px',
+              letterSpacing: '4px',
             }}
           >
             TRANSFORM · MULTIPLY · FLOW
@@ -682,7 +677,7 @@ const TitleOverlay = ({frame, fps}: {frame: number; fps: number}) => {
         <div
           style={{
             position: 'absolute',
-            bottom: 60,
+            bottom: 50,
             left: 0,
             right: 0,
             display: 'flex',
@@ -693,15 +688,16 @@ const TitleOverlay = ({frame, fps}: {frame: number; fps: number}) => {
         >
           <div
             style={{
-              fontSize: 42,
-              fontWeight: 800,
+              fontSize: 38,
+              fontWeight: 700,
               fontFamily: 'system-ui, -apple-system, sans-serif',
-              color: 'rgba(255,255,255,0.85)',
-              letterSpacing: '1px',
-              textShadow: '0 0 40px rgba(59,130,246,0.6)',
+              fontStyle: 'italic',
+              color: BRAND.white,
+              letterSpacing: '0.5px',
+              textShadow: '0 2px 20px rgba(0,80,60,0.3)',
             }}
           >
-            Content is Liquid ✦ Every format. Infinite variants.
+            Content is Liquid — Every format. Infinite variants.
           </div>
         </div>
       )}
@@ -710,7 +706,7 @@ const TitleOverlay = ({frame, fps}: {frame: number; fps: number}) => {
 };
 
 // =====================================================
-// PHASE LABEL (Variation / Transformation callouts)
+// PHASE LABEL (Variation / Transformation callouts - white on mint)
 // =====================================================
 const PhaseLabel = ({frame}: {frame: number}) => {
   const varOpacity = interpolate(frame, [200, 220], [0, 1], {
@@ -731,6 +727,51 @@ const PhaseLabel = ({frame}: {frame: number}) => {
     extrapolateRight: 'clamp',
   });
 
+  const labelStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(8px)',
+    borderRadius: 12,
+    padding: '12px 28px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    boxShadow: '0 4px 20px rgba(0,80,60,0.15)',
+  };
+
+  const arrowLineStyle: React.CSSProperties = {
+    width: 32,
+    height: 3,
+    borderRadius: 2,
+    background: BRAND.white,
+    position: 'relative' as const,
+  };
+
+  const arrowHeadStyle: React.CSSProperties = {
+    position: 'absolute' as const,
+    right: -6,
+    top: -4,
+    width: 0,
+    height: 0,
+    borderLeft: `8px solid ${BRAND.white}`,
+    borderTop: '5px solid transparent',
+    borderBottom: '5px solid transparent',
+  };
+
+  const textStyle: React.CSSProperties = {
+    color: BRAND.white,
+    fontSize: 26,
+    fontWeight: 800,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    letterSpacing: '1px',
+  };
+
+  const subtextStyle: React.CSSProperties = {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+    marginTop: 8,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  };
+
   return (
     <>
       {/* Variation label - top right */}
@@ -738,66 +779,19 @@ const PhaseLabel = ({frame}: {frame: number}) => {
         <div
           style={{
             position: 'absolute',
-            top: 36,
+            top: 40,
             right: 60,
             opacity: varOpacity * (1 - varFadeOut),
             pointerEvents: 'none',
           }}
         >
-          <div
-            style={{
-              background: 'rgba(239,68,68,0.15)',
-              border: '2px solid rgba(239,68,68,0.6)',
-              borderRadius: 12,
-              padding: '10px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 3,
-                borderRadius: 2,
-                background: '#EF4444',
-                position: 'relative',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  right: -6,
-                  top: -4,
-                  width: 0,
-                  height: 0,
-                  borderLeft: '8px solid #EF4444',
-                  borderTop: '5px solid transparent',
-                  borderBottom: '5px solid transparent',
-                }}
-              />
+          <div style={labelStyle}>
+            <div style={arrowLineStyle}>
+              <div style={arrowHeadStyle} />
             </div>
-            <span
-              style={{
-                color: '#EF4444',
-                fontSize: 28,
-                fontWeight: 800,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '1px',
-              }}
-            >
-              Variation
-            </span>
+            <span style={textStyle}>Variation</span>
           </div>
-          <div
-            style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 16,
-              marginTop: 6,
-              textAlign: 'right',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-          >
+          <div style={{...subtextStyle, textAlign: 'right'}}>
             infinite variants per modality
           </div>
         </div>
@@ -808,65 +802,19 @@ const PhaseLabel = ({frame}: {frame: number}) => {
         <div
           style={{
             position: 'absolute',
-            top: 36,
+            top: 40,
             left: 60,
             opacity: trOpacity * (1 - trFadeOut),
             pointerEvents: 'none',
           }}
         >
-          <div
-            style={{
-              background: 'rgba(59,130,246,0.15)',
-              border: '2px solid rgba(59,130,246,0.6)',
-              borderRadius: 12,
-              padding: '10px 24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 3,
-                borderRadius: 2,
-                background: '#3B82F6',
-                position: 'relative',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  right: -6,
-                  top: -4,
-                  width: 0,
-                  height: 0,
-                  borderLeft: '8px solid #3B82F6',
-                  borderTop: '5px solid transparent',
-                  borderBottom: '5px solid transparent',
-                }}
-              />
+          <div style={labelStyle}>
+            <div style={arrowLineStyle}>
+              <div style={arrowHeadStyle} />
             </div>
-            <span
-              style={{
-                color: '#3B82F6',
-                fontSize: 28,
-                fontWeight: 800,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '1px',
-              }}
-            >
-              Transformation
-            </span>
+            <span style={textStyle}>Transformation</span>
           </div>
-          <div
-            style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 16,
-              marginTop: 6,
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-          >
+          <div style={subtextStyle}>
             content flows between modalities
           </div>
         </div>
@@ -889,9 +837,9 @@ export const ContentIsLiquid = () => {
   });
 
   return (
-    <AbsoluteFill style={{background: '#080c1e', overflow: 'hidden'}}>
-      {/* Animated liquid background */}
-      <LiquidBackground frame={frame} />
+    <AbsoluteFill style={{background: BRAND.primary, overflow: 'hidden'}}>
+      {/* Geometric mint background with chevrons */}
+      <GeometricBackground frame={frame} />
 
       {/* Main SVG layer */}
       <svg
