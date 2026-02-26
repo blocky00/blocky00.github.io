@@ -39,6 +39,11 @@
       "id": "WhatsAppConversation",
       "output": "whatsapp-bitcoin.mp4",
       "enabled": false
+    },
+    {
+      "id": "FaustMephistoVibeCoding",
+      "output": "faust-mephisto-vibe-coding.mp4",
+      "enabled": true
     }
   ]
 }
