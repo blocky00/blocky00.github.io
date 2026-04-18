@@ -8,6 +8,7 @@ import {RemotionShowreel} from './RemotionShowreel';
 import {MunichBerlinMap} from './MunichBerlinMap';
 import {ContentIsLiquid} from './ContentIsLiquid';
 import {FaustMephistoVibeCoding} from './FaustMephistoVibeCoding';
+import {AsciiCatsDiscoverAI} from './AsciiCatsDiscoverAI';
 
 export const RemotionRoot = () => {
   return (
@@ -83,6 +84,14 @@ export const RemotionRoot = () => {
         fps={30}
         width={1080}
         height={1920}
+      />
+      <Composition
+        id="AsciiCatsDiscoverAI"
+        component={AsciiCatsDiscoverAI}
+        durationInFrames={900}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );

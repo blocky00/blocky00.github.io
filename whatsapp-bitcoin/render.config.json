@@ -43,6 +43,11 @@
     {
       "id": "FaustMephistoVibeCoding",
       "output": "faust-mephisto-vibe-coding.mp4",
+      "enabled": false
+    },
+    {
+      "id": "AsciiCatsDiscoverAI",
+      "output": "ascii-cats-discover-ai.mp4",
       "enabled": true
     }
   ]
