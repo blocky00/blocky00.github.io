@@ -1,0 +1,1237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0; width: 1920px; height: 1080px;
+        overflow: hidden; background: #0A0E14;
+        font-family: "Playfair Display", "Inter", serif;
+      }
+
+      /* ========== SCENES ========== */
+      .scene {
+        position: absolute; top: 0; left: 0;
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+      }
+      #scene1 { z-index: 1; }
+      #scene2 { z-index: 2; opacity: 0; }
+      #scene3 { z-index: 3; opacity: 0; }
+      #scene4 { z-index: 4; opacity: 0; }
+
+      /* ========== GLOBAL OVERLAYS ========== */
+      #vignette {
+        position: absolute; inset: 0; pointer-events: none;
+        background: radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(0,0,0,0.65) 100%);
+        z-index: 90;
+      }
+      #grain {
+        position: absolute; inset: 0; pointer-events: none;
+        opacity: 0.10; z-index: 91; mix-blend-mode: overlay;
+      }
+      #lb-top, #lb-bot {
+        position: absolute; left: 0; width: 1920px; height: 132px;
+        background: #060810; z-index: 100;
+      }
+      #lb-top { top: 0; }
+      #lb-bot { bottom: 0; }
+
+      /* Snap flash + chromatic */
+      #flash-overlay {
+        position: absolute; inset: 0; background: #ffffff;
+        opacity: 0; z-index: 80; pointer-events: none;
+      }
+      #chromatic-r, #chromatic-b {
+        position: absolute; inset: 0; opacity: 0; z-index: 81;
+        pointer-events: none; mix-blend-mode: screen;
+      }
+      #chromatic-r { background: radial-gradient(circle at 52% 50%, rgba(255,40,40,0.35), transparent 55%); }
+      #chromatic-b { background: radial-gradient(circle at 48% 50%, rgba(40,80,255,0.35), transparent 55%); }
+
+      /* ========== SHARED CITY BACKDROP ========== */
+      .sky {
+        position: absolute; top: 0; left: 0; width: 1920px; height: 700px;
+        background: linear-gradient(180deg, #6A95B0 0%, #A8C2D2 38%, #D7C9A6 72%, #ECD9B0 100%);
+      }
+      .sun {
+        position: absolute; top: 180px; left: 1420px;
+        width: 240px; height: 240px; border-radius: 50%;
+        background: radial-gradient(circle, #FFF8DC 0%, #F5D278 38%, rgba(245,180,80,0) 70%);
+        filter: blur(6px);
+      }
+      .sun-halo {
+        position: absolute; top: 80px; left: 1300px;
+        width: 480px; height: 480px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,240,180,0.35) 0%, rgba(255,220,120,0) 70%);
+        filter: blur(28px);
+      }
+      .bldg-far {
+        position: absolute; bottom: 360px; left: 0;
+        width: 1920px; height: 380px;
+        filter: blur(3.5px);
+      }
+      .bldg-mid {
+        position: absolute; bottom: 340px; left: 0;
+        width: 1920px; height: 320px;
+        filter: blur(1.5px);
+      }
+      .road {
+        position: absolute; bottom: 0; left: 0;
+        width: 1920px; height: 430px;
+        background: linear-gradient(180deg, #847A6A 0%, #62584C 35%, #423A30 100%);
+      }
+      .ground-shadow {
+        position: absolute; bottom: 90px; left: 0; width: 1920px; height: 70px;
+        background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35));
+        filter: blur(6px);
+      }
+      .crosswalk {
+        position: absolute; bottom: 60px; left: 200px; width: 1520px; height: 30px;
+        background: repeating-linear-gradient(90deg, rgba(220,210,180,0.25) 0 60px, transparent 60px 120px);
+        filter: blur(1px);
+      }
+
+      /* ========== PEDESTRIANS ========== */
+      .ped {
+        position: absolute;
+        width: 60px;
+      }
+      .ped-head {
+        width: 28px; height: 30px; border-radius: 50% 50% 45% 45%;
+        background: #1A2433; margin: 0 auto;
+      }
+      .ped-body {
+        width: 56px; height: 110px;
+        background: linear-gradient(180deg, #1E2A3A 0%, #0F1822 100%);
+        border-radius: 14px 14px 6px 6px;
+        margin: -4px auto 0;
+      }
+      .ped-leg-l, .ped-leg-r {
+        position: absolute; bottom: 0; width: 16px; height: 50px;
+        background: #0E1620; border-radius: 4px;
+      }
+      .ped-leg-l { left: 14px; }
+      .ped-leg-r { left: 32px; }
+
+      /* ========== PIGEONS ========== */
+      .pigeon { position: absolute; width: 36px; height: 16px; }
+      .pigeon-body {
+        position: absolute; left: 12px; top: 4px;
+        width: 14px; height: 8px; border-radius: 50%;
+        background: #3A4A5A;
+      }
+      .pigeon-wing-l, .pigeon-wing-r {
+        position: absolute; top: 0;
+        width: 18px; height: 10px;
+        background: #4A5A6A;
+        border-radius: 50% 10% 50% 50%;
+      }
+      .pigeon-wing-l { left: -2px; transform: rotate(-25deg); transform-origin: right center; }
+      .pigeon-wing-r { right: -2px; transform: rotate(25deg) scaleX(-1); transform-origin: left center; }
+
+      /* ========== MAIN CHARACTER ========== */
+      .character {
+        position: absolute;
+        transform-origin: bottom center;
+      }
+
+      /* ========== SCENE 2 — SHOCKWAVE ========== */
+      .shock-ring {
+        position: absolute;
+        top: 460px; left: 990px;
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        margin-left: -40px; margin-top: -40px;
+        transform: scale(0);
+        transform-origin: center center;
+        pointer-events: none;
+      }
+      #shock-ring-1 {
+        border: 8px solid rgba(232, 244, 255, 0.95);
+        box-shadow:
+          0 0 60px rgba(232,244,255,0.85),
+          0 0 120px rgba(180,210,255,0.45),
+          inset 0 0 40px rgba(232,244,255,0.35);
+      }
+      #shock-ring-2 {
+        border: 4px solid rgba(200, 225, 255, 0.7);
+        box-shadow: 0 0 30px rgba(200,225,255,0.5);
+      }
+      #shock-ring-3 {
+        border: 2px solid rgba(160, 200, 240, 0.5);
+      }
+      #shock-core {
+        position: absolute; top: 460px; left: 990px;
+        width: 40px; height: 40px; border-radius: 50%;
+        margin-left: -20px; margin-top: -20px;
+        background: radial-gradient(circle, #fff 0%, #E8F4FF 45%, transparent 80%);
+        box-shadow: 0 0 80px #E8F4FF, 0 0 160px rgba(232,244,255,0.7);
+        opacity: 0;
+      }
+      .heat-shimmer {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
+        mix-blend-mode: screen;
+        filter: blur(12px);
+      }
+
+      /* dust particles */
+      .dust {
+        position: absolute;
+        width: 5px; height: 5px; border-radius: 50%;
+        background: #C9D6E2;
+        box-shadow: 0 0 6px rgba(232,244,255,0.85);
+        opacity: 0;
+      }
+      /* leaves frozen mid-air */
+      .leaf {
+        position: absolute;
+        width: 14px; height: 8px; border-radius: 50% 10% 50% 10%;
+        background: #C09060;
+        opacity: 0;
+        transform-origin: center;
+      }
+      .frozen { filter: saturate(0.55) brightness(0.85) hue-rotate(-5deg); }
+
+      /* ========== SCENE 3 — FROZEN WALK ========== */
+      .silence-tint {
+        position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(20,30,45,0.18), rgba(0,0,0,0.05));
+        pointer-events: none;
+      }
+      .footstep-ring {
+        position: absolute;
+        bottom: 200px;
+        width: 60px; height: 18px;
+        border-radius: 50%;
+        border: 2px solid rgba(220,230,240,0.55);
+        opacity: 0;
+        transform: scale(0);
+        transform-origin: center center;
+      }
+      .shimmer {
+        position: absolute; width: 6px; height: 6px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(232,244,255,0.95), rgba(200,220,240,0));
+        opacity: 0;
+      }
+
+      /* ========== SCENE 4 — CIGARETTE / HYPERLAPSE ========== */
+      #s4-bg {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(ellipse at 50% 65%, rgba(60,75,90,0.6) 0%, transparent 65%),
+          linear-gradient(180deg, #45596B 0%, #586E80 35%, #5A5448 70%, #3A342C 100%);
+      }
+      #s4-frozen-bg {
+        position: absolute; inset: 0;
+        filter: blur(8px) saturate(0.45) brightness(0.55);
+        opacity: 0.7;
+      }
+      #s4-cigarette {
+        position: absolute;
+        bottom: 488px; left: 1010px;
+        width: 110px; height: 11px;
+        background: linear-gradient(90deg, #F5E6C8 0%, #E0D0B0 78%, #A04020 88%, #FF6B3D 95%, #FF4500 100%);
+        border-radius: 3px 6px 6px 3px;
+        transform-origin: left center;
+        transform: rotate(-6deg);
+        opacity: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      #s4-ember {
+        position: absolute;
+        bottom: 488px; left: 1108px;
+        width: 22px; height: 12px; border-radius: 50%;
+        background: radial-gradient(circle, #FFE080 0%, #FF6B3D 50%, transparent 90%);
+        box-shadow: 0 0 16px #FF6B3D, 0 0 32px rgba(255,107,61,0.6), 0 0 56px rgba(255,80,20,0.3);
+        transform: rotate(-6deg);
+        opacity: 0;
+      }
+      #s4-lighter-spark {
+        position: absolute;
+        bottom: 490px; left: 1110px;
+        width: 60px; height: 90px; border-radius: 50%;
+        background: radial-gradient(circle, #FFEE80 0%, #FF9B20 35%, rgba(255,80,20,0) 80%);
+        box-shadow: 0 0 32px #FFEE80, 0 0 56px rgba(255,200,80,0.7);
+        opacity: 0;
+        filter: blur(2px);
+      }
+      .smoke {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(220,230,240,0.55) 0%, rgba(190,205,220,0) 70%);
+        filter: blur(10px);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .hyper-streak {
+        position: absolute;
+        opacity: 0;
+        filter: blur(6px);
+      }
+      #s4-aura {
+        position: absolute;
+        bottom: 200px; left: 720px;
+        width: 360px; height: 460px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse, rgba(255,200,120,0.10) 0%, transparent 65%);
+        opacity: 0;
+        filter: blur(20px);
+      }
+
+      /* ========== TITLE ========== */
+      #title-card {
+        position: absolute;
+        top: 50%; left: 50%; transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 70;
+        opacity: 0;
+        pointer-events: none;
+      }
+      #title-card .word {
+        display: block;
+        font-family: "Playfair Display", serif;
+        font-weight: 700;
+        font-size: 96px;
+        letter-spacing: 0.04em;
+        color: #F5E6C8;
+        line-height: 1.0;
+        text-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      }
+      #title-card .sub {
+        display: block;
+        margin-top: 18px;
+        font-family: "Inter", sans-serif;
+        font-weight: 300;
+        font-size: 22px;
+        letter-spacing: 0.5em;
+        color: #C9D6E2;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1920" data-height="1080">
+      <!-- ===================================================== -->
+      <!-- SCENE 1 — Walking through city, snap                  -->
+      <!-- ===================================================== -->
+      <div id="scene1" class="scene">
+        <div class="sky"></div>
+        <div class="sun-halo"></div>
+        <div class="sun"></div>
+
+        <!-- Far buildings (blurred) -->
+        <div class="bldg-far">
+          <svg viewBox="0 0 1920 380" width="1920" height="380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="0"    y="180" width="180" height="200" fill="#5C7180"/>
+            <rect x="180"  y="120" width="220" height="260" fill="#6A8090"/>
+            <rect x="400"  y="80"  width="160" height="300" fill="#5A6F80"/>
+            <rect x="560"  y="160" width="200" height="220" fill="#6F8696"/>
+            <rect x="760"  y="40"  width="180" height="340" fill="#52677A"/>
+            <rect x="940"  y="100" width="220" height="280" fill="#62798C"/>
+            <rect x="1160" y="160" width="180" height="220" fill="#557082"/>
+            <rect x="1340" y="60"  width="220" height="320" fill="#6B8294"/>
+            <rect x="1560" y="120" width="200" height="260" fill="#5E7588"/>
+            <rect x="1760" y="180" width="160" height="200" fill="#536A7C"/>
+          </svg>
+        </div>
+
+        <!-- Mid buildings -->
+        <div class="bldg-mid">
+          <svg viewBox="0 0 1920 320" width="1920" height="320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="-20"  y="120" width="320" height="200" fill="#3F4F5E"/>
+            <rect x="280"  y="60"  width="280" height="260" fill="#46586A"/>
+            <rect x="540"  y="140" width="240" height="180" fill="#3A4A5A"/>
+            <rect x="780"  y="40"  width="320" height="280" fill="#4B5E70"/>
+            <rect x="1100" y="100" width="280" height="220" fill="#3F5060"/>
+            <rect x="1380" y="60"  width="280" height="260" fill="#48596C"/>
+            <rect x="1640" y="120" width="320" height="200" fill="#3D4E5F"/>
+            <!-- windows: gold glints -->
+            <g fill="#E0B870" opacity="0.7">
+              <rect x="320" y="120" width="6" height="10"/>
+              <rect x="340" y="140" width="6" height="10"/>
+              <rect x="380" y="100" width="6" height="10"/>
+              <rect x="820" y="120" width="6" height="10"/>
+              <rect x="860" y="180" width="6" height="10"/>
+              <rect x="1140" y="160" width="6" height="10"/>
+              <rect x="1420" y="100" width="6" height="10"/>
+              <rect x="1460" y="140" width="6" height="10"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="road"></div>
+        <div class="ground-shadow"></div>
+        <div class="crosswalk"></div>
+
+        <!-- Pedestrians -->
+        <div id="s1-ped-1" class="ped" style="bottom: 260px; left: 240px; transform: scale(0.85);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+        <div id="s1-ped-2" class="ped" style="bottom: 240px; left: 460px; transform: scale(0.95);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #324050 0%, #1E2A3A 100%);"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+        <div id="s1-ped-3" class="ped" style="bottom: 250px; left: 1280px; transform: scale(0.9);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #4A3A30 0%, #2E2418 100%);"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+        <div id="s1-ped-4" class="ped" style="bottom: 230px; left: 1480px; transform: scale(1.0);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+        <div id="s1-ped-5" class="ped" style="bottom: 270px; left: 100px; transform: scale(0.78);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #3A2E40 0%, #221830 100%);"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+        <div id="s1-ped-6" class="ped" style="bottom: 245px; left: 1700px; transform: scale(0.92);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l"></div><div class="ped-leg-r"></div>
+        </div>
+
+        <!-- Pigeons in distance sky -->
+        <div id="s1-pigeon-1" class="pigeon" style="top: 220px; left: 200px;">
+          <div class="pigeon-wing-l"></div><div class="pigeon-body"></div><div class="pigeon-wing-r"></div>
+        </div>
+        <div id="s1-pigeon-2" class="pigeon" style="top: 260px; left: 380px;">
+          <div class="pigeon-wing-l"></div><div class="pigeon-body"></div><div class="pigeon-wing-r"></div>
+        </div>
+        <div id="s1-pigeon-3" class="pigeon" style="top: 200px; left: 580px;">
+          <div class="pigeon-wing-l"></div><div class="pigeon-body"></div><div class="pigeon-wing-r"></div>
+        </div>
+        <div id="s1-pigeon-4" class="pigeon" style="top: 280px; left: 760px;">
+          <div class="pigeon-wing-l"></div><div class="pigeon-body"></div><div class="pigeon-wing-r"></div>
+        </div>
+        <div id="s1-pigeon-5" class="pigeon" style="top: 240px; left: 1040px;">
+          <div class="pigeon-wing-l"></div><div class="pigeon-body"></div><div class="pigeon-wing-r"></div>
+        </div>
+
+        <!-- Main character with raised arm -->
+        <svg id="s1-char" class="character" viewBox="0 0 200 360" width="180" height="324"
+             style="bottom: 130px; left: 870px;" xmlns="http://www.w3.org/2000/svg">
+          <!-- shadow under feet -->
+          <ellipse cx="100" cy="354" rx="70" ry="6" fill="#000" opacity="0.4"/>
+          <!-- left leg (back) -->
+          <path d="M70 200 L52 340 L78 340 L92 210 Z" fill="#0E1620"/>
+          <ellipse cx="65" cy="340" rx="20" ry="6" fill="#06090E"/>
+          <!-- right leg (forward) -->
+          <path d="M118 200 L142 308 L116 308 L96 210 Z" fill="#11202E"/>
+          <ellipse cx="129" cy="308" rx="20" ry="6" fill="#06090E"/>
+          <!-- jacket / torso -->
+          <path d="M40 80 Q100 64 160 80 L168 200 L130 215 L100 220 L70 215 L32 200 Z" fill="#0A1018"/>
+          <!-- collar accent (warm light) -->
+          <path d="M82 80 L100 102 L118 80 L112 76 L100 88 L88 76 Z" fill="#E8D5B0" opacity="0.85"/>
+          <!-- left arm down -->
+          <path d="M40 84 L20 200 L36 206 L60 90 Z" fill="#0A1018"/>
+          <ellipse cx="28" cy="206" rx="9" ry="11" fill="#F0D8B0"/>
+          <!-- right arm RAISED for snap -->
+          <g id="s1-snap-arm" style="transform-origin: 160px 80px;">
+            <path d="M160 80 L222 32 L210 22 L148 70 Z" fill="#0A1018"/>
+            <!-- snap hand + thumb + middle finger -->
+            <ellipse cx="226" cy="28" rx="11" ry="13" fill="#F0D8B0"/>
+            <path d="M218 18 L232 8 L236 14 L224 22 Z" fill="#F0D8B0"/>
+            <path d="M232 22 L244 16 L246 24 L236 30 Z" fill="#F0D8B0"/>
+          </g>
+          <!-- head -->
+          <ellipse cx="100" cy="46" rx="28" ry="32" fill="#1A2433"/>
+          <!-- subtle hair highlight -->
+          <path d="M76 28 Q100 14 124 28 L122 36 Q100 24 78 36 Z" fill="#0A1018"/>
+        </svg>
+
+        <!-- Pre-snap glint at fingertip (just before flash) -->
+        <div id="s1-snap-glint" style="position:absolute; top:158px; left:1100px;
+             width:14px; height:14px; border-radius:50%;
+             background: radial-gradient(circle, #fff 0%, transparent 70%);
+             box-shadow: 0 0 24px #fff, 0 0 48px rgba(255,255,255,0.7);
+             opacity: 0;"></div>
+
+        <!-- Title card (subtle) -->
+        <div id="title-card">
+          <span class="word">TIME</span>
+          <span class="word">FREEZE</span>
+          <span class="sub">— 0:01 —</span>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- SCENE 2 — Shockwave & freeze                           -->
+      <!-- ===================================================== -->
+      <div id="scene2" class="scene">
+        <div class="sky"></div>
+        <div class="sun-halo"></div>
+        <div class="sun"></div>
+
+        <div class="bldg-far frozen">
+          <svg viewBox="0 0 1920 380" width="1920" height="380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="0"    y="180" width="180" height="200" fill="#5C7180"/>
+            <rect x="180"  y="120" width="220" height="260" fill="#6A8090"/>
+            <rect x="400"  y="80"  width="160" height="300" fill="#5A6F80"/>
+            <rect x="560"  y="160" width="200" height="220" fill="#6F8696"/>
+            <rect x="760"  y="40"  width="180" height="340" fill="#52677A"/>
+            <rect x="940"  y="100" width="220" height="280" fill="#62798C"/>
+            <rect x="1160" y="160" width="180" height="220" fill="#557082"/>
+            <rect x="1340" y="60"  width="220" height="320" fill="#6B8294"/>
+            <rect x="1560" y="120" width="200" height="260" fill="#5E7588"/>
+            <rect x="1760" y="180" width="160" height="200" fill="#536A7C"/>
+          </svg>
+          <!-- light ripple distortion across buildings -->
+          <div id="s2-bldg-ripple" style="position:absolute; top:0; left:0; width:1920px; height:380px;
+                background: linear-gradient(90deg, transparent 0%, rgba(255,250,220,0.0) 30%, rgba(255,250,220,0.4) 50%, rgba(255,250,220,0.0) 70%, transparent 100%);
+                mix-blend-mode: screen; opacity: 0; transform: translateX(-100%);"></div>
+        </div>
+
+        <div class="bldg-mid frozen">
+          <svg viewBox="0 0 1920 320" width="1920" height="320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="-20"  y="120" width="320" height="200" fill="#3F4F5E"/>
+            <rect x="280"  y="60"  width="280" height="260" fill="#46586A"/>
+            <rect x="540"  y="140" width="240" height="180" fill="#3A4A5A"/>
+            <rect x="780"  y="40"  width="320" height="280" fill="#4B5E70"/>
+            <rect x="1100" y="100" width="280" height="220" fill="#3F5060"/>
+            <rect x="1380" y="60"  width="280" height="260" fill="#48596C"/>
+            <rect x="1640" y="120" width="320" height="200" fill="#3D4E5F"/>
+          </svg>
+        </div>
+
+        <div class="road"></div>
+        <div class="ground-shadow"></div>
+        <div class="crosswalk"></div>
+
+        <!-- Frozen pedestrians (mid-step poses) -->
+        <div id="s2-ped-1" class="ped frozen" style="bottom: 260px; left: 240px; transform: scale(0.85) rotate(-2deg);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l" style="transform: rotate(15deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(-12deg);"></div>
+        </div>
+        <div id="s2-ped-2" class="ped frozen" style="bottom: 240px; left: 460px; transform: scale(0.95) rotate(1deg);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #324050 0%, #1E2A3A 100%);"></div>
+          <div class="ped-leg-l" style="transform: rotate(-10deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(14deg);"></div>
+        </div>
+        <div id="s2-ped-3" class="ped frozen" style="bottom: 250px; left: 1280px; transform: scale(0.9);">
+          <div class="ped-head" style="transform: translate(4px, -2px);"></div>
+          <div class="ped-body" style="background: linear-gradient(180deg, #4A3A30 0%, #2E2418 100%);"></div>
+          <div class="ped-leg-l" style="transform: rotate(8deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(-15deg);"></div>
+        </div>
+        <div id="s2-ped-4" class="ped frozen" style="bottom: 230px; left: 1480px;">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l" style="transform: rotate(-14deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(10deg);"></div>
+        </div>
+        <div id="s2-ped-5" class="ped frozen" style="bottom: 270px; left: 100px; transform: scale(0.78);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #3A2E40 0%, #221830 100%);"></div>
+          <div class="ped-leg-l" style="transform: rotate(12deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(-9deg);"></div>
+        </div>
+        <div id="s2-ped-6" class="ped frozen" style="bottom: 245px; left: 1700px; transform: scale(0.92);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l" style="transform: rotate(-7deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(13deg);"></div>
+        </div>
+
+        <!-- Frozen pigeons (varied wing positions) -->
+        <div id="s2-pigeon-1" class="pigeon frozen" style="top: 220px; left: 200px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-50deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(45deg) scaleX(-1);"></div>
+        </div>
+        <div id="s2-pigeon-2" class="pigeon frozen" style="top: 240px; left: 380px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-12deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(60deg) scaleX(-1);"></div>
+        </div>
+        <div id="s2-pigeon-3" class="pigeon frozen" style="top: 190px; left: 580px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-65deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(15deg) scaleX(-1);"></div>
+        </div>
+        <div id="s2-pigeon-4" class="pigeon frozen" style="top: 270px; left: 760px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-30deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(35deg) scaleX(-1);"></div>
+        </div>
+        <div id="s2-pigeon-5" class="pigeon frozen" style="top: 250px; left: 1040px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-40deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(55deg) scaleX(-1);"></div>
+        </div>
+        <div id="s2-pigeon-6" class="pigeon frozen" style="top: 230px; left: 1300px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-22deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(48deg) scaleX(-1);"></div>
+        </div>
+
+        <!-- Heat-shimmer envelopes -->
+        <div class="heat-shimmer" id="s2-shimmer-1" style="top: 200px; left: 600px; width: 800px; height: 700px;"></div>
+        <div class="heat-shimmer" id="s2-shimmer-2" style="top: 100px; left: 1100px; width: 900px; height: 900px;"></div>
+
+        <!-- Shockwave rings (origin = char's right hand at ~1100,520) -->
+        <div id="shock-ring-1" class="shock-ring"></div>
+        <div id="shock-ring-2" class="shock-ring"></div>
+        <div id="shock-ring-3" class="shock-ring"></div>
+        <div id="shock-core"></div>
+
+        <!-- Dust + leaves frozen mid-air -->
+        <!-- (positions are deterministic, set inline) -->
+        <div class="dust" style="bottom: 240px; left: 320px;"></div>
+        <div class="dust" style="bottom: 280px; left: 480px;"></div>
+        <div class="dust" style="bottom: 320px; left: 620px;"></div>
+        <div class="dust" style="bottom: 260px; left: 780px;"></div>
+        <div class="dust" style="bottom: 360px; left: 920px;"></div>
+        <div class="dust" style="bottom: 300px; left: 1080px;"></div>
+        <div class="dust" style="bottom: 280px; left: 1240px;"></div>
+        <div class="dust" style="bottom: 340px; left: 1400px;"></div>
+        <div class="dust" style="bottom: 250px; left: 1580px;"></div>
+        <div class="dust" style="bottom: 380px; left: 1740px;"></div>
+        <div class="dust" style="bottom: 220px; left: 180px;"></div>
+        <div class="dust" style="bottom: 360px; left: 540px;"></div>
+
+        <div class="leaf" style="bottom: 380px; left: 350px; transform: rotate(20deg);"></div>
+        <div class="leaf" style="bottom: 420px; left: 720px; transform: rotate(-30deg);"></div>
+        <div class="leaf" style="bottom: 460px; left: 1100px; transform: rotate(45deg);"></div>
+        <div class="leaf" style="bottom: 400px; left: 1380px; transform: rotate(-15deg);"></div>
+        <div class="leaf" style="bottom: 440px; left: 1640px; transform: rotate(60deg);"></div>
+        <div class="leaf" style="bottom: 350px; left: 200px; transform: rotate(-50deg);"></div>
+
+        <!-- Main character standing post-snap (arm out) -->
+        <svg id="s2-char" class="character" viewBox="0 0 240 360" width="216" height="324"
+             style="bottom: 130px; left: 850px;" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="120" cy="354" rx="74" ry="6" fill="#000" opacity="0.45"/>
+          <path d="M90 200 L72 340 L98 340 L112 210 Z" fill="#0E1620"/>
+          <ellipse cx="85" cy="340" rx="20" ry="6" fill="#06090E"/>
+          <path d="M138 200 L162 308 L136 308 L116 210 Z" fill="#11202E"/>
+          <ellipse cx="149" cy="308" rx="20" ry="6" fill="#06090E"/>
+          <path d="M60 80 Q120 64 180 80 L188 200 L150 215 L120 220 L90 215 L52 200 Z" fill="#0A1018"/>
+          <path d="M102 80 L120 102 L138 80 L132 76 L120 88 L108 76 Z" fill="#E8D5B0" opacity="0.85"/>
+          <path d="M60 84 L40 200 L56 206 L80 90 Z" fill="#0A1018"/>
+          <ellipse cx="48" cy="206" rx="9" ry="11" fill="#F0D8B0"/>
+          <!-- Right arm extended outward, hand glowing -->
+          <path d="M180 80 L240 60 L236 50 L172 70 Z" fill="#0A1018"/>
+          <ellipse cx="240" cy="56" rx="11" ry="13" fill="#F0D8B0"/>
+          <ellipse cx="240" cy="56" rx="22" ry="22" fill="#fff" opacity="0.4"/>
+          <ellipse cx="120" cy="46" rx="28" ry="32" fill="#1A2433"/>
+        </svg>
+
+        <!-- Silence marker (subtle dots) -->
+        <div id="s2-silence" style="position:absolute; bottom: 200px; left: 50%; transform: translateX(-50%);
+             font-family: 'Inter', sans-serif; color: rgba(232,244,255,0.55);
+             font-size: 26px; letter-spacing: 1.2em; opacity: 0;">·  ·  ·</div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- SCENE 3 — Walking through frozen world                 -->
+      <!-- ===================================================== -->
+      <div id="scene3" class="scene">
+        <div class="sky" style="filter: saturate(0.78);"></div>
+        <div class="sun-halo" style="opacity:0.75;"></div>
+        <div class="sun" style="filter: blur(10px);"></div>
+
+        <div class="bldg-far frozen" style="filter: blur(5px) saturate(0.5);">
+          <svg viewBox="0 0 1920 380" width="1920" height="380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="0"    y="180" width="180" height="200" fill="#5C7180"/>
+            <rect x="180"  y="120" width="220" height="260" fill="#6A8090"/>
+            <rect x="400"  y="80"  width="160" height="300" fill="#5A6F80"/>
+            <rect x="560"  y="160" width="200" height="220" fill="#6F8696"/>
+            <rect x="760"  y="40"  width="180" height="340" fill="#52677A"/>
+            <rect x="940"  y="100" width="220" height="280" fill="#62798C"/>
+            <rect x="1160" y="160" width="180" height="220" fill="#557082"/>
+            <rect x="1340" y="60"  width="220" height="320" fill="#6B8294"/>
+            <rect x="1560" y="120" width="200" height="260" fill="#5E7588"/>
+            <rect x="1760" y="180" width="160" height="200" fill="#536A7C"/>
+          </svg>
+        </div>
+        <div class="bldg-mid frozen" style="filter: blur(3px) saturate(0.55);">
+          <svg viewBox="0 0 1920 320" width="1920" height="320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect x="-20"  y="120" width="320" height="200" fill="#3F4F5E"/>
+            <rect x="280"  y="60"  width="280" height="260" fill="#46586A"/>
+            <rect x="540"  y="140" width="240" height="180" fill="#3A4A5A"/>
+            <rect x="780"  y="40"  width="320" height="280" fill="#4B5E70"/>
+            <rect x="1100" y="100" width="280" height="220" fill="#3F5060"/>
+            <rect x="1380" y="60"  width="280" height="260" fill="#48596C"/>
+            <rect x="1640" y="120" width="320" height="200" fill="#3D4E5F"/>
+          </svg>
+        </div>
+
+        <div class="road"></div>
+        <div class="ground-shadow"></div>
+        <div class="crosswalk"></div>
+        <div class="silence-tint"></div>
+
+        <!-- Frozen pedestrians (slightly more blurred for DOF) -->
+        <div class="ped frozen" style="bottom: 260px; left: 240px; transform: scale(0.85) rotate(-2deg); filter: blur(2px) saturate(0.55) brightness(0.85);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l" style="transform: rotate(15deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(-12deg);"></div>
+        </div>
+        <div class="ped frozen" style="bottom: 240px; left: 460px; transform: scale(0.95) rotate(1deg); filter: blur(2px) saturate(0.55) brightness(0.85);">
+          <div class="ped-head"></div><div class="ped-body" style="background: linear-gradient(180deg, #324050 0%, #1E2A3A 100%);"></div>
+          <div class="ped-leg-l" style="transform: rotate(-10deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(14deg);"></div>
+        </div>
+        <div class="ped frozen" style="bottom: 250px; left: 1280px; transform: scale(0.9); filter: blur(2px) saturate(0.55) brightness(0.85);">
+          <div class="ped-head" style="transform: translate(4px, -2px);"></div>
+          <div class="ped-body" style="background: linear-gradient(180deg, #4A3A30 0%, #2E2418 100%);"></div>
+          <div class="ped-leg-l" style="transform: rotate(8deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(-15deg);"></div>
+        </div>
+        <div class="ped frozen" style="bottom: 230px; left: 1480px; filter: blur(1.5px) saturate(0.55) brightness(0.85);">
+          <div class="ped-head"></div><div class="ped-body"></div>
+          <div class="ped-leg-l" style="transform: rotate(-14deg);"></div>
+          <div class="ped-leg-r" style="transform: rotate(10deg);"></div>
+        </div>
+
+        <!-- Frozen pigeons (one above char) -->
+        <div class="pigeon frozen" style="top: 220px; left: 200px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-50deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(45deg) scaleX(-1);"></div>
+        </div>
+        <div class="pigeon frozen" style="top: 250px; left: 1300px;">
+          <div class="pigeon-wing-l" style="transform: rotate(-22deg);"></div>
+          <div class="pigeon-body"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(48deg) scaleX(-1);"></div>
+        </div>
+
+        <!-- THE pigeon above the character (he reaches it) -->
+        <div id="s3-pigeon-above" class="pigeon" style="position:absolute; top: 320px; left: 940px; transform: scale(1.6);">
+          <div class="pigeon-wing-l" style="transform: rotate(-35deg); background:#5A6A7A;"></div>
+          <div class="pigeon-body" style="background:#4A5A6A;"></div>
+          <div class="pigeon-wing-r" style="transform: rotate(40deg) scaleX(-1); background:#5A6A7A;"></div>
+        </div>
+        <!-- subtle coo ripple -->
+        <div id="s3-coo-ring" style="position:absolute; top:340px; left:960px;
+             width: 80px; height: 24px; border-radius: 50%;
+             border: 2px solid rgba(232,244,255,0.45);
+             margin-left:-40px; margin-top:-12px;
+             transform: scale(0); opacity: 0;"></div>
+
+        <!-- Floating shimmer particles -->
+        <div class="shimmer" style="bottom: 380px; left: 280px;"></div>
+        <div class="shimmer" style="bottom: 420px; left: 460px;"></div>
+        <div class="shimmer" style="bottom: 500px; left: 640px;"></div>
+        <div class="shimmer" style="bottom: 380px; left: 820px;"></div>
+        <div class="shimmer" style="bottom: 540px; left: 1060px;"></div>
+        <div class="shimmer" style="bottom: 460px; left: 1240px;"></div>
+        <div class="shimmer" style="bottom: 400px; left: 1420px;"></div>
+        <div class="shimmer" style="bottom: 510px; left: 1600px;"></div>
+        <div class="shimmer" style="bottom: 350px; left: 160px;"></div>
+        <div class="shimmer" style="bottom: 480px; left: 1820px;"></div>
+        <div class="shimmer" style="bottom: 600px; left: 380px;"></div>
+        <div class="shimmer" style="bottom: 560px; left: 1480px;"></div>
+
+        <!-- Footstep echo rings (positioned later by the character) -->
+        <div class="footstep-ring" id="s3-step-1" style="left: 920px;"></div>
+        <div class="footstep-ring" id="s3-step-2" style="left: 1020px;"></div>
+
+        <!-- Walking character (closer, scaled larger as cam pulls back from him) -->
+        <svg id="s3-char" class="character" viewBox="0 0 200 360" width="220" height="396"
+             style="bottom: 110px; left: 870px;" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="100" cy="354" rx="74" ry="7" fill="#000" opacity="0.55"/>
+          <path d="M70 200 L52 340 L78 340 L92 210 Z" fill="#0E1620"/>
+          <ellipse cx="65" cy="340" rx="20" ry="7" fill="#06090E"/>
+          <path d="M118 200 L142 308 L116 308 L96 210 Z" fill="#11202E"/>
+          <ellipse cx="129" cy="308" rx="20" ry="7" fill="#06090E"/>
+          <path d="M40 80 Q100 64 160 80 L168 200 L130 215 L100 220 L70 215 L32 200 Z" fill="#0A1018"/>
+          <path d="M82 80 L100 102 L118 80 L112 76 L100 88 L88 76 Z" fill="#E8D5B0" opacity="0.9"/>
+          <path d="M40 84 L20 200 L36 206 L60 90 Z" fill="#0A1018"/>
+          <ellipse cx="28" cy="206" rx="9" ry="11" fill="#F0D8B0"/>
+          <!-- Right arm reaching upward to pigeon -->
+          <g id="s3-arm-up" style="transform-origin: 160px 84px;">
+            <path d="M160 84 L186 -10 L172 -16 L142 78 Z" fill="#0A1018"/>
+            <ellipse cx="180" cy="-12" rx="12" ry="14" fill="#F0D8B0"/>
+          </g>
+          <ellipse cx="100" cy="46" rx="28" ry="32" fill="#1A2433"/>
+          <!-- subtle smile glow -->
+          <path d="M88 56 Q100 64 112 56" stroke="#E8D5B0" stroke-width="1.5" fill="none" opacity="0.4"/>
+        </svg>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- SCENE 4 — Cigarette + Hyperlapse                       -->
+      <!-- ===================================================== -->
+      <div id="scene4" class="scene">
+        <div id="s4-bg"></div>
+
+        <!-- Frozen world blurred behind -->
+        <div id="s4-frozen-bg">
+          <div class="bldg-far">
+            <svg viewBox="0 0 1920 380" width="1920" height="380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <rect x="0"    y="180" width="180" height="200" fill="#5C7180"/>
+              <rect x="180"  y="120" width="220" height="260" fill="#6A8090"/>
+              <rect x="400"  y="80"  width="160" height="300" fill="#5A6F80"/>
+              <rect x="560"  y="160" width="200" height="220" fill="#6F8696"/>
+              <rect x="760"  y="40"  width="180" height="340" fill="#52677A"/>
+              <rect x="940"  y="100" width="220" height="280" fill="#62798C"/>
+              <rect x="1160" y="160" width="180" height="220" fill="#557082"/>
+              <rect x="1340" y="60"  width="220" height="320" fill="#6B8294"/>
+              <rect x="1560" y="120" width="200" height="260" fill="#5E7588"/>
+              <rect x="1760" y="180" width="160" height="200" fill="#536A7C"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Hyperlapse streak layer (initially hidden) -->
+        <div id="s4-hyper-layer" style="position:absolute; inset:0;">
+          <div class="hyper-streak" id="hs-1" style="bottom: 240px; left: 100px; width: 220px; height: 90px; background: linear-gradient(90deg, transparent, rgba(40,55,75,0.85), transparent);"></div>
+          <div class="hyper-streak" id="hs-2" style="bottom: 270px; left: 320px; width: 280px; height: 100px; background: linear-gradient(90deg, transparent, rgba(60,75,95,0.7), transparent);"></div>
+          <div class="hyper-streak" id="hs-3" style="bottom: 220px; left: 1280px; width: 240px; height: 100px; background: linear-gradient(90deg, transparent, rgba(50,40,30,0.7), transparent);"></div>
+          <div class="hyper-streak" id="hs-4" style="bottom: 250px; left: 1500px; width: 300px; height: 110px; background: linear-gradient(90deg, transparent, rgba(40,55,75,0.8), transparent);"></div>
+          <div class="hyper-streak" id="hs-5" style="bottom: 230px; left: 60px;  width: 320px; height: 80px;  background: linear-gradient(90deg, transparent, rgba(36,28,40,0.75), transparent);"></div>
+          <div class="hyper-streak" id="hs-6" style="bottom: 280px; left: 1620px; width: 240px; height: 90px; background: linear-gradient(90deg, transparent, rgba(50,60,75,0.7), transparent);"></div>
+          <!-- Pigeon streaks -->
+          <div class="hyper-streak" id="hs-pg-1" style="top: 230px; left: 100px;  width: 360px; height: 18px; background: linear-gradient(90deg, transparent, rgba(70,85,100,0.85), transparent);"></div>
+          <div class="hyper-streak" id="hs-pg-2" style="top: 270px; left: 580px;  width: 420px; height: 16px; background: linear-gradient(90deg, transparent, rgba(75,90,105,0.85), transparent);"></div>
+          <div class="hyper-streak" id="hs-pg-3" style="top: 200px; left: 1100px; width: 380px; height: 18px; background: linear-gradient(90deg, transparent, rgba(70,85,100,0.85), transparent);"></div>
+        </div>
+
+        <div class="road"></div>
+        <div class="ground-shadow"></div>
+
+        <!-- Confidence aura behind character -->
+        <div id="s4-aura"></div>
+
+        <!-- Character — closer, mid shot, turned slightly toward camera -->
+        <svg id="s4-char" class="character" viewBox="0 0 220 380" width="240" height="414"
+             style="bottom: 120px; left: 800px;" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="110" cy="376" rx="80" ry="8" fill="#000" opacity="0.55"/>
+          <path d="M80 220 L62 360 L88 360 L100 230 Z" fill="#0E1620"/>
+          <ellipse cx="75" cy="360" rx="22" ry="7" fill="#06090E"/>
+          <path d="M124 220 L148 360 L122 360 L106 230 Z" fill="#11202E"/>
+          <ellipse cx="135" cy="360" rx="22" ry="7" fill="#06090E"/>
+          <path d="M50 90 Q110 70 170 90 L178 220 L140 235 L110 240 L80 235 L42 220 Z" fill="#0A1018"/>
+          <path d="M92 90 L110 116 L128 90 L122 84 L110 100 L98 84 Z" fill="#E8D5B0" opacity="0.9"/>
+          <!-- left arm casual down -->
+          <path d="M50 96 L34 220 L48 226 L70 100 Z" fill="#0A1018"/>
+          <ellipse cx="42" cy="226" rx="10" ry="12" fill="#F0D8B0"/>
+          <!-- right arm — holding lighter near face initially -->
+          <g id="s4-right-arm" style="transform-origin: 170px 96px;">
+            <path d="M170 96 L210 60 L202 50 L162 86 Z" fill="#0A1018"/>
+            <ellipse cx="212" cy="58" rx="11" ry="13" fill="#F0D8B0"/>
+            <!-- lighter -->
+            <rect x="206" y="48" width="14" height="20" rx="2" fill="#1A2433"/>
+          </g>
+          <!-- head w/ subtle confident smile -->
+          <ellipse cx="110" cy="50" rx="32" ry="36" fill="#1A2433"/>
+          <path d="M76 30 Q110 14 144 30 L142 40 Q110 24 78 40 Z" fill="#0A1018"/>
+          <!-- mouth (cigarette dock) -->
+          <path d="M94 64 Q110 72 126 64" stroke="#E8D5B0" stroke-width="2" fill="none" opacity="0.7"/>
+        </svg>
+
+        <!-- Lighter spark -->
+        <div id="s4-lighter-spark"></div>
+        <!-- Cigarette + ember -->
+        <div id="s4-cigarette"></div>
+        <div id="s4-ember"></div>
+
+        <!-- Smoke wisps (rising from cigarette tip) -->
+        <div class="smoke" id="smoke-1" style="bottom: 500px; left: 1080px; width: 120px; height: 120px;"></div>
+        <div class="smoke" id="smoke-2" style="bottom: 540px; left: 1100px; width: 160px; height: 160px;"></div>
+        <div class="smoke" id="smoke-3" style="bottom: 580px; left: 1060px; width: 200px; height: 200px;"></div>
+        <div class="smoke" id="smoke-4" style="bottom: 620px; left: 1120px; width: 240px; height: 240px;"></div>
+        <div class="smoke" id="smoke-5" style="bottom: 460px; left: 1090px; width: 90px;  height: 90px;"></div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- GLOBAL OVERLAYS                                        -->
+      <!-- ===================================================== -->
+      <div id="chromatic-r"></div>
+      <div id="chromatic-b"></div>
+      <div id="flash-overlay"></div>
+      <div id="vignette"></div>
+      <div id="grain">
+        <svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="grainNoise">
+              <feTurbulence type="fractalNoise" baseFrequency="0.92" numOctaves="2" seed="7"/>
+              <feColorMatrix values="0 0 0 0 0.92  0 0 0 0 0.88  0 0 0 0 0.78  0 0 0 0.6 0"/>
+            </filter>
+          </defs>
+          <rect width="1920" height="1080" filter="url(#grainNoise)"/>
+        </svg>
+      </div>
+      <div id="lb-top"></div>
+      <div id="lb-bot"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+
+      // Deterministic PRNG
+      function mulberry32(seed) {
+        return function() {
+          seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+          var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      const rand = mulberry32(0xC0FFEE);
+
+      const tl = gsap.timeline({ paused: true });
+
+      /* =====================================================
+         SCENE 1 — Walking through city  (0.0 – 3.0s)
+         ===================================================== */
+
+      // Camera dolly: subtle forward push
+      tl.fromTo("#scene1",
+        { scale: 1.0, transformOrigin: "50% 60%" },
+        { scale: 1.06, duration: 3.0, ease: "sine.inOut" }, 0);
+
+      // Title card (briefly)
+      tl.fromTo("#title-card", { opacity: 0, scale: 0.96 },
+        { opacity: 1, scale: 1.0, duration: 0.6, ease: "power2.out" }, 0.3);
+      tl.to("#title-card", { opacity: 0, duration: 0.4, ease: "power2.in" }, 1.4);
+
+      // Pigeons cross the sky (S1)
+      const s1Pigeons = ["#s1-pigeon-1","#s1-pigeon-2","#s1-pigeon-3","#s1-pigeon-4","#s1-pigeon-5"];
+      s1Pigeons.forEach((id, i) => {
+        const delay = i * 0.18;
+        tl.fromTo(id,
+          { x: 0, y: 0 },
+          { x: 280 + i*40, y: -30 - i*8, duration: 3.0, ease: "sine.inOut" }, delay);
+        // wing flap (finite repeats)
+        const cycle = 0.18;
+        const dur = 3.0 - delay;
+        const reps = Math.max(0, Math.ceil(dur / cycle) - 1);
+        tl.to(id + " .pigeon-wing-l",
+          { rotation: -55, duration: cycle/2, yoyo: true, repeat: reps, ease: "sine.inOut" }, delay);
+        tl.to(id + " .pigeon-wing-r",
+          { rotation: 55, duration: cycle/2, yoyo: true, repeat: reps, ease: "sine.inOut" }, delay);
+      });
+
+      // Pedestrians walk (subtle x drift)
+      const s1Peds = ["#s1-ped-1","#s1-ped-2","#s1-ped-3","#s1-ped-4","#s1-ped-5","#s1-ped-6"];
+      s1Peds.forEach((id, i) => {
+        const dir = (i % 2 === 0) ? 1 : -1;
+        tl.fromTo(id,
+          { x: 0 },
+          { x: dir * (40 + i*8), duration: 3.0, ease: "none" }, 0);
+        // leg bounce
+        const cycle = 0.32;
+        const reps = Math.ceil(3.0 / cycle) - 1;
+        tl.to(id + " .ped-leg-l",
+          { rotation: 18, duration: cycle/2, yoyo: true, repeat: reps, ease: "sine.inOut", transformOrigin: "top center" }, i * 0.04);
+        tl.to(id + " .ped-leg-r",
+          { rotation: -18, duration: cycle/2, yoyo: true, repeat: reps, ease: "sine.inOut", transformOrigin: "top center" }, i * 0.04);
+      });
+
+      // Main character forward dolly (slight scale up + bob)
+      tl.fromTo("#s1-char",
+        { y: 0, scale: 1.0 },
+        { y: -10, scale: 1.06, duration: 2.6, ease: "sine.inOut" }, 0);
+      // walking bob
+      const bobCycle = 0.45;
+      const bobReps = Math.ceil(2.4 / bobCycle) - 1;
+      tl.to("#s1-char",
+        { y: "-=8", duration: bobCycle/2, yoyo: true, repeat: bobReps, ease: "sine.inOut" }, 0.2);
+
+      // Right arm raise (toward camera) — starts 1.6s, completes by 2.5s
+      tl.fromTo("#s1-snap-arm",
+        { rotation: 0 },
+        { rotation: -8, duration: 0.9, ease: "power2.out" }, 1.6);
+
+      // Snap glint flash at fingertip (right before T=2.85)
+      tl.to("#s1-snap-glint", { opacity: 1, scale: 2.2, duration: 0.18, ease: "power4.out" }, 2.72);
+
+      /* =====================================================
+         TRANSITION 1 — Snap flash / overexposure burn (2.85 – 3.05)
+         ===================================================== */
+      // Brief chromatic split
+      tl.to("#chromatic-r", { opacity: 0.7, duration: 0.12, ease: "expo.out" }, 2.78);
+      tl.to("#chromatic-b", { opacity: 0.7, duration: 0.12, ease: "expo.out" }, 2.78);
+      tl.to("#chromatic-r", { opacity: 0, duration: 0.5, ease: "power2.in" }, 2.95);
+      tl.to("#chromatic-b", { opacity: 0, duration: 0.5, ease: "power2.in" }, 2.95);
+
+      // Big white flash
+      tl.to("#flash-overlay", { opacity: 1, duration: 0.10, ease: "power4.out" }, 2.85);
+      // Reveal scene 2 under the flash
+      tl.set("#scene2", { opacity: 1 }, 2.95);
+      tl.to("#flash-overlay", { opacity: 0, duration: 0.55, ease: "power3.in", overwrite: "auto" }, 2.97);
+      // Hide scene 1
+      tl.to("#scene1", { opacity: 0, duration: 0.05 }, 3.0);
+      tl.set("#scene1", { visibility: "hidden" }, 3.06);
+
+      /* =====================================================
+         SCENE 2 — Shockwave & freeze (3.0 – 6.0s)
+         ===================================================== */
+
+      // Bright core flash at origin
+      tl.fromTo("#shock-core",
+        { scale: 0, opacity: 0 },
+        { scale: 5, opacity: 1, duration: 0.18, ease: "expo.out" }, 3.0);
+      tl.to("#shock-core",
+        { scale: 14, opacity: 0, duration: 0.7, ease: "power3.out" }, 3.18);
+
+      // Three expanding shock rings (different easings, sizes)
+      tl.fromTo("#shock-ring-1",
+        { scale: 0, opacity: 1 },
+        { scale: 32, opacity: 0, duration: 1.4, ease: "expo.out" }, 3.02);
+      tl.fromTo("#shock-ring-2",
+        { scale: 0, opacity: 0.85 },
+        { scale: 38, opacity: 0, duration: 1.6, ease: "power3.out" }, 3.08);
+      tl.fromTo("#shock-ring-3",
+        { scale: 0, opacity: 0.7 },
+        { scale: 44, opacity: 0, duration: 1.9, ease: "power2.out" }, 3.14);
+
+      // Heat shimmer envelopes
+      tl.fromTo("#s2-shimmer-1",
+        { opacity: 0, scale: 0.6 },
+        { opacity: 0.9, scale: 1.4, duration: 1.2, ease: "power2.out" }, 3.05);
+      tl.to("#s2-shimmer-1", { opacity: 0, duration: 0.8, ease: "sine.in" }, 4.4);
+      tl.fromTo("#s2-shimmer-2",
+        { opacity: 0, scale: 0.6 },
+        { opacity: 0.7, scale: 1.5, duration: 1.4, ease: "power2.out" }, 3.18);
+      tl.to("#s2-shimmer-2", { opacity: 0, duration: 0.8, ease: "sine.in" }, 4.6);
+
+      // Building light ripple
+      tl.fromTo("#s2-bldg-ripple",
+        { x: -1920, opacity: 0 },
+        { x: 1920, opacity: 1, duration: 1.4, ease: "power2.inOut" }, 3.1);
+      tl.to("#s2-bldg-ripple", { opacity: 0, duration: 0.3 }, 4.5);
+
+      // Dust + leaves: rise quickly then freeze
+      gsap.utils.toArray("#scene2 .dust").forEach((el, i) => {
+        const delay = 3.05 + (rand() * 0.5);
+        tl.fromTo(el,
+          { y: 80, opacity: 0, scale: 0.4 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, delay);
+        // tiny shimmer pulse later
+        tl.to(el,
+          { opacity: 0.55, duration: 0.6, yoyo: true, repeat: 3, ease: "sine.inOut" }, 4.0 + (i % 4) * 0.1);
+      });
+      gsap.utils.toArray("#scene2 .leaf").forEach((el, i) => {
+        const delay = 3.08 + (rand() * 0.5);
+        tl.fromTo(el,
+          { y: 100, opacity: 0, rotation: "+=40" },
+          { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, delay);
+      });
+
+      // Frozen pedestrians: settle in (slight scale-pop on arrival of wave)
+      ["#s2-ped-1","#s2-ped-2","#s2-ped-3","#s2-ped-4","#s2-ped-5","#s2-ped-6"].forEach((id, i) => {
+        const arrive = 3.05 + i * 0.06;
+        tl.fromTo(id,
+          { filter: "saturate(0.55) brightness(1.05)" },
+          { filter: "saturate(0.55) brightness(0.85)", duration: 0.4, ease: "power2.out" }, arrive);
+      });
+      // Frozen pigeons: pop + freeze
+      ["#s2-pigeon-1","#s2-pigeon-2","#s2-pigeon-3","#s2-pigeon-4","#s2-pigeon-5","#s2-pigeon-6"].forEach((id, i) => {
+        const arrive = 3.1 + i * 0.05;
+        tl.fromTo(id,
+          { y: -8, filter: "brightness(1.1)" },
+          { y: 0, filter: "brightness(0.85)", duration: 0.35, ease: "power2.out" }, arrive);
+      });
+
+      // Camera micro push to emphasize impact
+      tl.fromTo("#scene2",
+        { scale: 1.04, transformOrigin: "55% 50%" },
+        { scale: 1.0, duration: 1.2, ease: "power2.out" }, 3.0);
+
+      // Char arm slowly returns to side; turns head
+      tl.fromTo("#s2-char",
+        { x: 0, y: 0 },
+        { x: -10, duration: 2.8, ease: "sine.inOut" }, 3.2);
+
+      // Silence dots fade in
+      tl.to("#s2-silence", { opacity: 1, duration: 0.6, ease: "sine.out" }, 4.6);
+
+      /* =====================================================
+         TRANSITION 2 — Blur crossfade (5.7 – 6.2s)
+         ===================================================== */
+      tl.to("#scene2", { filter: "blur(12px)", duration: 0.4, ease: "sine.in" }, 5.7);
+      tl.set("#scene3", { opacity: 1 }, 5.85);
+      tl.fromTo("#scene3",
+        { filter: "blur(14px)" },
+        { filter: "blur(0px)", duration: 0.55, ease: "sine.out" }, 5.85);
+      tl.to("#scene2", { opacity: 0, duration: 0.2 }, 6.05);
+      tl.set("#scene2", { visibility: "hidden" }, 6.26);
+
+      /* =====================================================
+         SCENE 3 — Walking through frozen world (6.0 – 9.0s)
+         ===================================================== */
+
+      // Camera "moves backward" (= scene scales down slightly + char appears to grow)
+      tl.fromTo("#scene3",
+        { scale: 1.08, transformOrigin: "50% 60%" },
+        { scale: 1.0, duration: 3.0, ease: "sine.inOut" }, 6.0);
+
+      // Character bobs as he walks; small leftward drift toward camera
+      tl.fromTo("#s3-char",
+        { x: 0, y: 0 },
+        { x: -20, y: -6, duration: 2.8, ease: "sine.inOut" }, 6.0);
+      const s3BobReps = Math.ceil(2.6 / 0.45) - 1;
+      tl.to("#s3-char",
+        { y: "-=6", duration: 0.225, yoyo: true, repeat: s3BobReps, ease: "sine.inOut" }, 6.1);
+
+      // Footstep echo rings — pulse twice
+      tl.fromTo("#s3-step-1",
+        { scale: 0, opacity: 0 },
+        { scale: 4, opacity: 1, duration: 0.5, ease: "power2.out" }, 6.2);
+      tl.to("#s3-step-1", { opacity: 0, duration: 0.3 }, 6.6);
+      tl.fromTo("#s3-step-2",
+        { scale: 0, opacity: 0 },
+        { scale: 5, opacity: 1, duration: 0.6, ease: "power2.out" }, 6.7);
+      tl.to("#s3-step-2", { opacity: 0, duration: 0.3 }, 7.2);
+
+      // Floating shimmers — ambient sparkle (finite oscillation)
+      gsap.utils.toArray("#scene3 .shimmer").forEach((el, i) => {
+        const startScale = 0.6 + rand() * 0.6;
+        tl.fromTo(el,
+          { opacity: 0, scale: startScale },
+          { opacity: 0.8 + rand()*0.2, scale: startScale + 0.5, duration: 0.6, ease: "power2.out" }, 6.0 + i * 0.06);
+        // gentle bob
+        const bobR = Math.ceil(2.5 / 0.7) - 1;
+        tl.to(el, { y: "-=" + (10 + rand()*12), duration: 0.35, yoyo: true, repeat: bobR, ease: "sine.inOut" }, 6.4 + i * 0.04);
+      });
+
+      // Hand reaches up to pigeon
+      tl.fromTo("#s3-arm-up",
+        { rotation: 30, opacity: 0 },
+        { rotation: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 6.8);
+
+      // Pigeon coo ring (low cooing visualized)
+      tl.fromTo("#s3-coo-ring",
+        { scale: 0, opacity: 0 },
+        { scale: 4.5, opacity: 0.7, duration: 0.9, ease: "power2.out" }, 7.2);
+      tl.to("#s3-coo-ring", { opacity: 0, duration: 0.4 }, 8.0);
+      // pigeon micro-shudder when touched
+      tl.fromTo("#s3-pigeon-above",
+        { x: 0 },
+        { x: 4, duration: 0.05, yoyo: true, repeat: 5, ease: "sine.inOut" }, 7.2);
+
+      // Hand returns
+      tl.to("#s3-arm-up",
+        { rotation: 25, duration: 0.5, ease: "power2.in" }, 8.0);
+
+      /* =====================================================
+         TRANSITION 3 — Focus pull (8.7 – 9.1s)
+         ===================================================== */
+      tl.to("#scene3", { filter: "blur(18px)", duration: 0.4, ease: "power2.in" }, 8.7);
+      tl.set("#scene4", { opacity: 1 }, 8.9);
+      tl.fromTo("#scene4",
+        { filter: "blur(22px)", scale: 1.08, transformOrigin: "50% 60%" },
+        { filter: "blur(0px)", scale: 1.0, duration: 0.6, ease: "power3.out" }, 8.9);
+      tl.to("#scene3", { opacity: 0, duration: 0.2 }, 9.05);
+      tl.set("#scene3", { visibility: "hidden" }, 9.26);
+
+      /* =====================================================
+         SCENE 4 — Cigarette + Hyperlapse (9.0 – 15.0s)
+         ===================================================== */
+
+      // Aura warms behind him
+      tl.fromTo("#s4-aura",
+        { opacity: 0, scale: 0.85 },
+        { opacity: 1, scale: 1.05, duration: 1.2, ease: "sine.out" }, 9.1);
+
+      // Lighter spark flash
+      tl.fromTo("#s4-lighter-spark",
+        { opacity: 0, scale: 0.4 },
+        { opacity: 1, scale: 1.4, duration: 0.16, ease: "expo.out" }, 9.6);
+      tl.to("#s4-lighter-spark",
+        { opacity: 0, scale: 1.8, duration: 0.55, ease: "power2.in", overwrite: "auto" }, 9.80);
+
+      // Cigarette appears, ember ignites
+      tl.fromTo("#s4-cigarette",
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }, 9.7);
+      tl.fromTo("#s4-ember",
+        { opacity: 0, scale: 0.4 },
+        { opacity: 1, scale: 1.0, duration: 0.4, ease: "expo.out" }, 9.85);
+      // ember pulses (finite) — start AFTER ignite tween ends (10.25)
+      const emberReps = Math.ceil((15.0 - 10.42) / 0.6) - 1;
+      tl.to("#s4-ember",
+        { scale: 1.12, duration: 0.3, yoyo: true, repeat: emberReps, ease: "sine.inOut", overwrite: "auto" }, 10.42);
+
+      // Right arm lowers (lighter away) after lighting
+      tl.to("#s4-right-arm",
+        { rotation: 22, duration: 0.7, ease: "power2.inOut" }, 10.0);
+
+      // Smoke wisps rise — staggered, slow drift up & out
+      ["#smoke-1","#smoke-2","#smoke-3","#smoke-4","#smoke-5"].forEach((id, i) => {
+        const start = 10.1 + i * 0.18;
+        tl.fromTo(id,
+          { opacity: 0, y: 60, scale: 0.6 },
+          { opacity: 0.8, y: -40, scale: 1.2, duration: 1.4, ease: "sine.out" }, start);
+        tl.to(id,
+          { y: -180, scale: 1.6, opacity: 0, duration: 1.8, ease: "sine.inOut" }, start + 1.2);
+      });
+
+      // Subtle smile / character settles
+      tl.fromTo("#s4-char",
+        { x: 0, y: 0, scale: 1.0 },
+        { x: 8, y: -4, scale: 1.02, duration: 1.6, ease: "sine.inOut" }, 9.6);
+
+      // ---- T=11.7: Throw away cig + second snap ----
+      tl.to("#s4-cigarette", { x: 200, y: 120, rotation: -45, opacity: 0, duration: 0.4, ease: "power2.in", overwrite: "auto" }, 11.7);
+      tl.to("#s4-ember", { x: 200, y: 120, rotation: -45, opacity: 0, duration: 0.4, ease: "power2.in", overwrite: "auto" }, 11.7);
+
+      // Second snap flash (smaller)
+      tl.to("#flash-overlay", { opacity: 0.85, duration: 0.08, ease: "expo.out" }, 12.0);
+      tl.to("#flash-overlay", { opacity: 0, duration: 0.4, ease: "power3.in", overwrite: "auto" }, 12.12);
+      tl.to("#chromatic-r", { opacity: 0.5, duration: 0.08 }, 12.0);
+      tl.to("#chromatic-b", { opacity: 0.5, duration: 0.08 }, 12.0);
+      tl.to("#chromatic-r", { opacity: 0, duration: 0.4, overwrite: "auto" }, 12.12);
+      tl.to("#chromatic-b", { opacity: 0, duration: 0.4, overwrite: "auto" }, 12.12);
+
+      // Frozen background fades back in (people resume)
+      tl.to("#s4-frozen-bg", { opacity: 0.95, filter: "blur(2px) saturate(0.85) brightness(0.9)", duration: 0.5, ease: "power2.out" }, 12.05);
+      tl.to("#s4-aura", { opacity: 0.4, duration: 0.5 }, 12.05);
+
+      // ---- HYPERLAPSE: streaks fly past at high speed ----
+      // Hyperlapse window: 12.1 → 14.6  (2.5s)
+      const hyperEls = [
+        { id: "#hs-1", from: -400, to: 2400, cycle: 0.16 },
+        { id: "#hs-2", from: -500, to: 2500, cycle: 0.14 },
+        { id: "#hs-3", from: 2400, to: -400, cycle: 0.18 },
+        { id: "#hs-4", from: 2500, to: -500, cycle: 0.13 },
+        { id: "#hs-5", from: -600, to: 2600, cycle: 0.17 },
+        { id: "#hs-6", from: 2400, to: -500, cycle: 0.15 },
+        { id: "#hs-pg-1", from: -400, to: 2400, cycle: 0.12 },
+        { id: "#hs-pg-2", from: 2400, to: -400, cycle: 0.13 },
+        { id: "#hs-pg-3", from: -500, to: 2500, cycle: 0.14 },
+      ];
+      const hyperStart = 12.1;
+      const hyperWindow = 2.5;
+      hyperEls.forEach((e, i) => {
+        const offset = (i % 4) * 0.08;
+        const startT = hyperStart + offset;
+        const dur = hyperWindow - offset;
+        const reps = Math.max(0, Math.ceil(dur / e.cycle) - 1);
+        // Reveal streak
+        tl.to(e.id, { opacity: 0.95, duration: 0.1 }, startT);
+        // Sweep across (yoyo creates a back-forth sweep effect for varied movement)
+        tl.fromTo(e.id,
+          { x: e.from },
+          { x: e.to, duration: e.cycle, ease: "none", repeat: reps }, startT);
+      });
+
+      // Camera shake during hyperlapse
+      const shakeReps = Math.ceil(hyperWindow / 0.08) - 1;
+      tl.fromTo("#s4-char",
+        { x: 8 },
+        { x: 12, duration: 0.04, yoyo: true, repeat: shakeReps, ease: "none" }, hyperStart);
+
+      // Hyperlapse winds down
+      hyperEls.forEach((e) => {
+        tl.to(e.id, { opacity: 0, duration: 0.4, ease: "power2.in" }, hyperStart + hyperWindow - 0.2);
+      });
+
+      /* =====================================================
+         OUTRO — fade to black (final scene only)
+         ===================================================== */
+      tl.to(["#scene4", "#vignette", "#grain"], { opacity: 0, duration: 0.5, ease: "power2.in" }, 14.5);
+      tl.to(["#lb-top", "#lb-bot"], { height: 540, duration: 0.5, ease: "power2.in" }, 14.5);
+      tl.set("#scene4", { visibility: "hidden" }, 15.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
