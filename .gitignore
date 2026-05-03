@@ -2,3 +2,12 @@ output/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Node / Hyperframes
+node_modules/
+.agents/skills/
+.claude/skills/
+skills-lock.json
+time-freeze/node_modules/
+time-freeze/.hyperframes/
+time-freeze/renders/
